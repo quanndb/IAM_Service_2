@@ -1,11 +1,7 @@
-package com.example.identityService.service;
+package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
-import com.example.identityService.DTO.request.EmailRequest;
-import com.example.identityService.DTO.request.ChangePasswordRequest;
-import com.example.identityService.DTO.request.LoginRequest;
-import com.example.identityService.DTO.request.RegisterRequest;
-import com.example.identityService.DTO.request.UpdateProfileRequest;
+import com.example.identityService.DTO.request.*;
 import com.example.identityService.DTO.response.CloudResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.DTO.response.UserResponse;
@@ -21,6 +17,9 @@ import com.example.identityService.mapper.CloudImageMapper;
 import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.repository.LoggerRepository;
 import com.example.identityService.repository.RoleRepository;
+import com.example.identityService.service.CloudinaryService;
+import com.example.identityService.service.EmailService;
+import com.example.identityService.service.TokenService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
@@ -40,7 +39,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class DefaultAuthService implements IAuthService {
 
     @NonFinal
     @Value(value = "${app.baseUrl}")
@@ -84,7 +83,8 @@ public class AuthService {
     private final AccountMapper accountMapper;
 
     // -----------------------------Login logout start-------------------------------
-    public LoginResponse login(LoginRequest request, String ip){
+    @Override
+    public LoginResponse login(DefaultLoginRequest request){
         Account account = getAccountByEmail(request.getEmail());
         if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
         boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
@@ -101,7 +101,7 @@ public class AuthService {
             throw new AppExceptions(ErrorCode.INVALID_EMAIL_PASSWORD);
         }
 
-        return loginProcess(account, ip);
+        return loginProcess(account, request.getIp());
     }
 
     public LoginResponse loginProcess(Account account, String ip){
@@ -122,10 +122,11 @@ public class AuthService {
                 .build();
     }
 
-    public Boolean logout(String accessToken, String refreshToken) {
-        boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(accessToken,
+    @Override
+    public boolean logout(AppLogoutRequest request) {
+        boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(request.getAccessToken(),
                 TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)));
-        boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(refreshToken,
+        boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(request.getRefreshToken(),
                 TimeConverter.convertToMilliseconds(REFRESH_TOKEN_LIFE_TIME)));
         return  isDisabledAccessToken && isDisabledRefreshToken;
     }
@@ -141,7 +142,8 @@ public class AuthService {
     // -----------------------------Login logout end-------------------------------
 
     // -----------------------------Registration flow start-------------------------------
-    public boolean register(RegisterRequest request, String ip){
+    @Override
+    public boolean register(RegisterRequest request){
         accountRepository
                 .findByEmail(request.getEmail())
                 .ifPresent(_ -> {
@@ -156,10 +158,10 @@ public class AuthService {
         accountRepository.save(newAccount);
         loggerRepository.save(Logs.builder()
                         .actionName("REGISTRATION")
-                        .ip(ip)
+                        .ip(request.getIp())
                 .build());
 
-        sendVerifyEmail(newAccount.getEmail(), ip);
+        sendVerifyEmail(newAccount.getEmail(), request.getIp());
         return true;
     }
 
@@ -200,7 +202,8 @@ public class AuthService {
 
     // -----------------------------User information start-------------------------------
     // profile
-    public UserResponse getProfile() {
+    @Override
+    public UserResponse getProfile(String token) {
         Account foundUser = getCurrentUser();
         return UserResponse.builder()
                 .email(foundUser.getEmail())
@@ -324,7 +327,8 @@ public class AuthService {
         return getAccountByEmail(email);
     }
 
-    public String getNewAccessToken(String refreshToken){
+    @Override
+    public String getNewToken(String refreshToken){
         if(!tokenService.verifyToken(refreshToken) ||
                 Objects.isNull(tokenService.getTokenDecoded(refreshToken).getSubject())){
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
@@ -334,5 +338,6 @@ public class AuthService {
         Account foundAccount = getAccountByEmail(email);
         return tokenService.accessTokenFactory(foundAccount);
     }
+
     // -----------------------------Utilities end-------------------------------
 }

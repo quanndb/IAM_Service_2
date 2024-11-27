@@ -2,6 +2,7 @@ package com.example.identityService.exception;
 
 import com.example.identityService.DTO.ApiResponse;
 import com.fasterxml.jackson.core.JsonParseException;
+import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,25 @@ public class GlobalExceptionHandler {
                 .message(ErrorCode.FORBIDDEN_EXCEPTION.getMessage())
                 .build();
         return ResponseEntity.status(ErrorCode.FORBIDDEN_EXCEPTION.getStatusCode()).body(apiResponse);
+    }
+
+    @ExceptionHandler(value = FeignException.class)
+    ResponseEntity<ApiResponse<?>> handleFeignExceptions(FeignException exception){
+        if(exception.status() == 401) {
+            ApiResponse<?> apiResponse = ApiResponse.builder()
+                    .code(ErrorCode.UNAUTHENTICATED.getCode())
+                    .message(ErrorCode.UNAUTHENTICATED.getMessage())
+                    .build();
+            return ResponseEntity.status(ErrorCode.UNAUTHENTICATED.getStatusCode()).body(apiResponse);
+        }
+        if(exception.status() == 403) {
+            ApiResponse<?> apiResponse = ApiResponse.builder()
+                    .code(ErrorCode.FORBIDDEN_EXCEPTION.getCode())
+                    .message(ErrorCode.FORBIDDEN_EXCEPTION.getMessage())
+                    .build();
+            return ResponseEntity.status(ErrorCode.FORBIDDEN_EXCEPTION.getStatusCode()).body(apiResponse);
+        }
+        else return handleRuntimeExceptions(exception);
     }
 
     @ExceptionHandler(value = BadJwtException.class)

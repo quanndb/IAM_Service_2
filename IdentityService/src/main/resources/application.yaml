@@ -3,6 +3,14 @@ keycloak:
   auth-server-url: http://localhost:8081
   resource: iam-client
   credentials:
-    secret: Kymd9TTPc2NYY5tTiecVlQWX5UeJ9nSK
+    secret: vUAlBnG43sreZsAr7hvdqOz5S9FYz0Il
   ssl-required: external
   use-resource-role-mappings: true
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/auth/realms/IAM2
+          jwk-set-uri: http://localhost:8081/auth/realms/IAM2/protocol/openid-connect/certs

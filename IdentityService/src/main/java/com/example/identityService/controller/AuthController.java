@@ -7,7 +7,8 @@ import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.IpChecker;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.Util.ObjectValidator;
-import com.example.identityService.service.AuthService;
+import com.example.identityService.config.idp_config.AuthServiceFactory;
+import com.example.identityService.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,28 +22,56 @@ import java.io.IOException;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthService authService;
-
+    private final AuthServiceFactory authServiceFactory;
+    private final DefaultAuthService authService;
     private final ObjectValidator objectValidator;
     private final JsonMapper jsonMapper;
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request){
-        String ip = IpChecker.getClientIpFromRequest(request);
-        var res = authService.login(dto, ip);
-        return ApiResponse.<LoginResponse>builder()
+    public ApiResponse<?> login(@RequestBody @Valid DefaultLoginRequest dto, HttpServletRequest request){
+        dto.setIp(IpChecker.getClientIpFromRequest(request));
+        var res = authServiceFactory.getAuthService().login(dto);
+        return ApiResponse.builder()
                 .code(200)
                 .result(res)
                 .build();
     }
 
+    @PostMapping("/logout")
+    public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
+        String accessToken = requestHeader.getHeader("Authorization").substring(7);
+        String refreshToken = requestBody.getRefreshToken();
+        boolean result = authServiceFactory.getAuthService().logout(new AppLogoutRequest(accessToken, refreshToken));
+        return ApiResponse.<Boolean>builder()
+                .code(200)
+                .message(ApiResponse.setResponseMessage(result))
+                .build();
+    }
+
     @PostMapping("/registration")
     public ApiResponse<Boolean> register(@RequestBody @Valid RegisterRequest dto, HttpServletRequest request){
-        String ip = IpChecker.getClientIpFromRequest(request);
+        dto.setIp(IpChecker.getClientIpFromRequest(request));
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message("Please check your verification email")
-                .result(authService.register(dto, ip))
+                .result(authServiceFactory.getAuthService().register(dto))
+                .build();
+    }
+
+    @GetMapping("/refresh-token")
+    public ApiResponse<String> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody){
+        String refreshToken = requestBody.getRefreshToken();
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(authServiceFactory.getAuthService().getNewToken(refreshToken))
+                .build();
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<?> getProfile(HttpServletRequest requestHeader){
+        return ApiResponse.builder()
+                .code(200)
+                .result(authServiceFactory.getAuthService().getProfile(requestHeader.getHeader("Authorization")))
                 .build();
     }
 
@@ -52,17 +81,6 @@ public class AuthController {
         return ApiResponse.builder()
                 .code(200)
                 .result(authService.verifyEmailAndIP(token, ip))
-                .build();
-    }
-
-    @PostMapping("/logout")
-    public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
-        String accessToken = requestHeader.getHeader("Authorization").substring(7);
-        String refreshToken = requestBody.getRefreshToken();
-        boolean result = authService.logout(accessToken, refreshToken);
-        return ApiResponse.<Boolean>builder()
-                .code(200)
-                .message(ApiResponse.setResponseMessage(result))
                 .build();
     }
 
@@ -85,23 +103,6 @@ public class AuthController {
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
-                .build();
-    }
-
-    @GetMapping("/refresh-token")
-    public ApiResponse<String> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody){
-        String refreshToken = requestBody.getRefreshToken();
-        return ApiResponse.<String>builder()
-                .code(200)
-                .result(authService.getNewAccessToken(refreshToken))
-                .build();
-    }
-
-    @GetMapping("/me")
-    public ApiResponse<UserResponse> getProfile(){
-        return ApiResponse.<UserResponse>builder()
-                .code(200)
-                .result(authService.getProfile())
                 .build();
     }
 

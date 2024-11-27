@@ -9,7 +9,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
 
 
-@Component
 @RequiredArgsConstructor
 public class CustomJwtDecoder implements JwtDecoder {
 
