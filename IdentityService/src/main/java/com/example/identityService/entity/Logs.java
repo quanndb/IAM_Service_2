@@ -1,6 +1,12 @@
 package com.example.identityService.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +22,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
+@Table(name = "logs")
 @RequiredArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -23,7 +30,6 @@ public class Logs {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @CreatedBy
     @Column(nullable = false)
     private String email;
     @Column(nullable = false)
@@ -33,5 +39,8 @@ public class Logs {
     @Column(nullable = false)
     @CreatedDate
     private LocalDateTime dateTime;
+    @Column(nullable = false)
+    @CreatedBy
+    private String createdBy;
     private String note;
 }

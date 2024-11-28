@@ -2,8 +2,6 @@ package com.example.identityService.controller;
 
 import com.example.identityService.DTO.ApiResponse;
 import com.example.identityService.DTO.request.*;
-import com.example.identityService.DTO.response.LoginResponse;
-import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.IpChecker;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.Util.ObjectValidator;
@@ -28,7 +26,7 @@ public class AuthController {
     private final JsonMapper jsonMapper;
 
     @PostMapping("/login")
-    public ApiResponse<?> login(@RequestBody @Valid DefaultLoginRequest dto, HttpServletRequest request){
+    public ApiResponse<?> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request){
         dto.setIp(IpChecker.getClientIpFromRequest(request));
         var res = authServiceFactory.getAuthService().login(dto);
         return ApiResponse.builder()
@@ -59,9 +57,9 @@ public class AuthController {
     }
 
     @GetMapping("/refresh-token")
-    public ApiResponse<String> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody){
+    public ApiResponse<?> getNewAccessToken(@RequestBody @Valid RefreshTokenRequest requestBody){
         String refreshToken = requestBody.getRefreshToken();
-        return ApiResponse.<String>builder()
+        return ApiResponse.builder()
                 .code(200)
                 .result(authServiceFactory.getAuthService().getNewToken(refreshToken))
                 .build();

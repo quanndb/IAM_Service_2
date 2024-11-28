@@ -1,9 +1,15 @@
 keycloak:
   realm: IAM2
-  auth-server-url: http://localhost:8081
+  auth-server-url: http://localhost:8081/auth
   resource: iam-client
+  jwt:
+    resource-id: iam-client
+    principal-attribute: principal_username
   credentials:
+    client-id: iam-client
     secret: vUAlBnG43sreZsAr7hvdqOz5S9FYz0Il
+    scope: openid
+    grant-type: password
   ssl-required: external
   use-resource-role-mappings: true
 

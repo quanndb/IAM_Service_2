@@ -22,6 +22,5 @@ public class RegisterRequest {
     private String fullname;
     private Gender gender;
     private String address;
-    @NotBlank(message = "FIELD_NOT_BLANK")
     private String ip;
 }

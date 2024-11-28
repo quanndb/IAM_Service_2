@@ -1,22 +1,37 @@
 package com.example.identityService.service.auth;
 
-import com.example.identityService.DTO.request.AppLogoutRequest;
-import com.example.identityService.DTO.request.DefaultLoginRequest;
-import com.example.identityService.DTO.request.RegisterRequest;
-import com.example.identityService.DTO.response.LoginResponse;
-import com.example.identityService.repository.keyCloakRepositories.ProfileClient;
+import com.example.identityService.DTO.request.*;
+import com.example.identityService.config.KeycloakProvider;
+import com.example.identityService.config.properties.KeycloakCredentialsProperties;
+import com.example.identityService.repository.keyCloakRepositories.AuthClient;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class KeycloakService implements IAuthService{
 
-    private final ProfileClient profileClient;
+    private final AuthClient authClient;
+    private final DefaultAuthService defaultAuthService;
+    private final KeycloakCredentialsProperties properties;
+    private final KeycloakProvider keycloakProvider;
 
     @Override
-    public String login(DefaultLoginRequest request) {
-        return "http://localhost:8081/auth/realms/IAM2/protocol/openid-connect/auth";
+    public Object login(LoginRequest request) {
+
+        return authClient.loginWithKeycloak(Map.of(
+                "username", request.getEmail(),
+                "password", request.getPassword(),
+                "client_id", properties.getClientId(),
+                "client_secret", properties.getSecret(),
+                "scope", properties.getScope(),
+                "grant_type", properties.getGrantType()
+        ));
     }
 
     @Override
@@ -26,16 +41,38 @@ public class KeycloakService implements IAuthService{
 
     @Override
     public boolean register(RegisterRequest request) {
-        return false;
+        defaultAuthService.register(request);
+
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(request.getEmail());
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFullname().split(" ")[0]);
+        user.setLastName(request.getFullname().split(" ")[1]);
+        user.setEnabled(true);
+
+        CredentialRepresentation passwordCred = new CredentialRepresentation();
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue(request.getPassword());
+        passwordCred.setTemporary(false);
+
+        user.setCredentials(Collections.singletonList(passwordCred));
+
+        keycloakProvider.getRealmResource().users().create(user);
+        keycloakProvider.getKeycloak().close();
+        return true;
     }
 
     @Override
     public Object getProfile(String token) {
-        return profileClient.getUserInfo(token);
+        return authClient.getUserInfo(token);
     }
 
     @Override
-    public String getNewToken(String refreshToken) {
-        return "";
+    public Object getNewToken(String refreshToken) {
+        return authClient.getNewToken(Map.of(
+                "grant_type", "refresh_token",
+                "client_id", "iam-client",
+                "client_secret", "vUAlBnG43sreZsAr7hvdqOz5S9FYz0Il",
+                "refresh_token", refreshToken));
     }
 }

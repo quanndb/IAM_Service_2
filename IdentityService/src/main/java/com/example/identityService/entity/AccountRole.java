@@ -1,49 +1,43 @@
 package com.example.identityService.entity;
 
-import com.example.identityService.DTO.PermissionScope;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.RequiredArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @Builder
-@Table(name = "role_permission")
+@Table(name = "account_role")
 @RequiredArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class RolePermission {
+public class AccountRole {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    String id;
     @Column(nullable = false)
-    private String roleId;
+    String accountId;
     @Column(nullable = false)
-    private String permissionId;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PermissionScope scope;
-    @Column(nullable = false)
-    @CreatedBy
-    private String createdBy;
-    @Column(nullable = false)
+    String roleId;
     @CreatedDate
-    private LocalDate createdDate;
+    @Column(nullable = false)
+    LocalDateTime createdDate;
+    @CreatedBy
+    @Column(nullable = false)
+    String createdBy;
 }

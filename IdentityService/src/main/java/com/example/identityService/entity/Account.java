@@ -7,6 +7,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -15,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @Table(name = "account")
 @RequiredArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,8 +35,14 @@ public class Account {
     private String fullname;
     @Column(nullable = false)
     private boolean isVerified;
-    @Column(nullable = false)
-    private String roleId;
+    @CreatedDate
+    private LocalDateTime createdDate;
+    @CreatedBy
+    private String createdBy;
+    @LastModifiedDate
+    private LocalDateTime updatedDate;
+    @LastModifiedBy
+    private String updatedBy;
     private Gender gender;
     private String address;
     private String cloudImageId;

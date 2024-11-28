@@ -3,10 +3,12 @@ package com.example.identityService.service;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.AuthenticationProperties;
 import com.example.identityService.entity.Account;
+import com.example.identityService.entity.AccountRole;
 import com.example.identityService.entity.Role;
 import com.example.identityService.DTO.Token;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
+import com.example.identityService.repository.AccountRoleRepository;
 import com.example.identityService.repository.RoleRepository;
 
 import io.jsonwebtoken.Claims;
@@ -26,9 +28,8 @@ import org.springframework.stereotype.Component;
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
-import java.util.Date;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -47,7 +48,7 @@ public class TokenService implements InitializingBean {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    private final RoleRepository roleRepository;
+    private final AccountRoleService accountRoleService;
 
     @Override
     public void afterPropertiesSet() {
@@ -61,7 +62,6 @@ public class TokenService implements InitializingBean {
         return keyStoreKeyFactory.getKeyPair(alias);
     }
 
-
     // token generators
     public String generateRefreshToken(String email, String ip){
         return otherTokenFactory(email, REFRESH_TOKEN_LIFE_TIME, ip);
@@ -72,9 +72,6 @@ public class TokenService implements InitializingBean {
     }
 
     public String accessTokenFactory(Account account) {
-        // get the permissions
-        Role role = roleRepository.findById(account.getRoleId())
-                .orElseThrow(()->new AppExceptions(ErrorCode.ROLE_NOTFOUND));
 
         String tokenId = UUID.randomUUID().toString();
 
@@ -85,7 +82,7 @@ public class TokenService implements InitializingBean {
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)))
                 .id(tokenId)
-                .claim("scope", role.getName())
+                .claim("scope", accountRoleService.getAllUserRole(account.getId()))
                 .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
     }
@@ -149,4 +146,5 @@ public class TokenService implements InitializingBean {
             return false;
         }
     }
+
 }

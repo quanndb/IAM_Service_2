@@ -6,14 +6,17 @@ import com.example.identityService.entity.Permission;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.repository.AccountRepository;
+import com.example.identityService.repository.AccountRoleRepository;
 import com.example.identityService.repository.PermissionRepository;
 import com.example.identityService.repository.RolePermissionRepository;
+import com.example.identityService.service.AccountRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -23,6 +26,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     private final AccountRepository accountRepository;
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final AccountRoleService accountRoleService;
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
@@ -41,18 +45,23 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     }
 
     private boolean checkUserPermission(String email, Object resourceId, Object permissionScope) {
-        PermissionScope foundScope = PermissionScope.valueOf(permissionScope.toString());
+        PermissionScope foundScope = PermissionScope.valueOf(permissionScope.toString().toUpperCase());
 
         Account foundUser = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
 
-        boolean res =  rolePermissionRepository
-                .existsByRoleIdAndPermissionIdAndScope(
-                        foundUser.getRoleId(),
-                        resourceId.toString(),
-                        foundScope
-                );
+        List<String> roleIds = accountRoleService.getAllUserRoleId(foundUser.getId());
 
-        return res;
+        for(String item : roleIds){
+            boolean isExistedRole =  rolePermissionRepository
+                    .existsByRoleIdAndPermissionIdAndScope(
+                            item,
+                            resourceId.toString(),
+                            foundScope
+                    );
+
+            if(isExistedRole) return true;
+        }
+        return false;
     }
 }

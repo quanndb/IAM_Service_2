@@ -1,20 +1,22 @@
 package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
+import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.request.*;
 import com.example.identityService.DTO.response.CloudResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.entity.Account;
+import com.example.identityService.entity.AccountRole;
 import com.example.identityService.entity.Logs;
 import com.example.identityService.DTO.Token;
-import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.AccountMapper;
 import com.example.identityService.mapper.CloudImageMapper;
 import com.example.identityService.repository.AccountRepository;
+import com.example.identityService.repository.AccountRoleRepository;
 import com.example.identityService.repository.LoggerRepository;
 import com.example.identityService.repository.RoleRepository;
 import com.example.identityService.service.CloudinaryService;
@@ -77,6 +79,7 @@ public class DefaultAuthService implements IAuthService {
     private final EmailService emailService;
     private final LoggerRepository loggerRepository;
     private final RoleRepository roleRepository;
+    private final AccountRoleRepository accountRoleRepository;
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -84,7 +87,7 @@ public class DefaultAuthService implements IAuthService {
 
     // -----------------------------Login logout start-------------------------------
     @Override
-    public LoginResponse login(DefaultLoginRequest request){
+    public LoginResponse login(LoginRequest request){
         Account account = getAccountByEmail(request.getEmail());
         if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
         boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
@@ -114,6 +117,7 @@ public class DefaultAuthService implements IAuthService {
         String refreshToken = tokenService.generateRefreshToken(account.getEmail(), ip);
         loggerRepository.save(Logs.builder()
                 .actionName("LOGIN")
+                .email(account.getEmail())
                 .ip(ip)
                 .build());
         return LoginResponse.builder()
@@ -150,15 +154,21 @@ public class DefaultAuthService implements IAuthService {
                     throw new AppExceptions(ErrorCode.USER_EXISTED);
                 });
         Account newAccount = accountMapper.toAccount(request);
-        Role userRole = roleRepository.findByNameIgnoreCase("USER")
-                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
-        newAccount.setRoleId(userRole.getId());
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        accountRepository.save(newAccount);
+        Account savedAccount = accountRepository.save(newAccount);
         loggerRepository.save(Logs.builder()
                         .actionName("REGISTRATION")
+                        .email(newAccount.getEmail())
                         .ip(request.getIp())
+                .build());
+
+        String userRoleId = roleRepository.findByNameIgnoreCase(EnumRole.USER.name())
+                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND)).getId();
+
+        accountRoleRepository.save(AccountRole.builder()
+                        .accountId(savedAccount.getId())
+                        .roleId(userRoleId)
                 .build());
 
         sendVerifyEmail(newAccount.getEmail(), request.getIp());
@@ -181,7 +191,7 @@ public class DefaultAuthService implements IAuthService {
         if(!tokenService.verifyToken(token) || !ip.equals(ipFromToken))
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
 
-        boolean foundLog =loggerRepository
+        boolean foundLog = loggerRepository
                 .existsByEmailAndIp(email, ipFromToken);
 
         Account account = getAccountByEmail(email);
@@ -193,6 +203,7 @@ public class DefaultAuthService implements IAuthService {
 
         loggerRepository.save(Logs.builder()
                 .actionName("CONFIRM_IP")
+                .email(email)
                 .ip(ip)
                 .build());
 
@@ -248,6 +259,7 @@ public class DefaultAuthService implements IAuthService {
 
         loggerRepository.save(Logs.builder()
                 .actionName("CHANGE_PASSWORD")
+                .email(foundUser.getEmail())
                 .ip(ip)
                 .build());
         return true;
@@ -275,6 +287,7 @@ public class DefaultAuthService implements IAuthService {
 
         loggerRepository.save(Logs.builder()
                 .actionName("RESET_PASSWORD")
+                .email(foundAccount.getEmail())
                 .ip(ip)
                 .build());
 

@@ -9,12 +9,9 @@ import com.example.identityService.repository.RolePermissionRepository;
 import com.example.identityService.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,10 +40,14 @@ public class RolePermissionService {
     }
 
     // un assign
-    public boolean unAssignPermission(String roleId, String permissionId) {
-        RolePermission rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
-                .orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_PERMISSION_NOTFOUND));
-        rolePermissionRepository.delete(rolePermission);
+    @PreAuthorize("hasRole('ADMIN')")
+    public boolean unAssignPermission(String roleId, String permissionId, List<PermissionScope> scopes) {
+        List<RolePermission> rolePermission = rolePermissionRepository.findAllByRoleIdAndPermissionId(roleId, permissionId);
+        List<RolePermission> deleteRolePermission = rolePermission.stream()
+                .filter(item -> scopes.contains(item.getScope()))
+                .toList();
+
+        rolePermissionRepository.deleteAll(deleteRolePermission);
         return true;
     }
 }

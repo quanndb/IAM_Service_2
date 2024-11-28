@@ -1,5 +1,6 @@
 package com.example.identityService.config;
 
+import com.example.identityService.config.properties.JwtConverterProperties;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;

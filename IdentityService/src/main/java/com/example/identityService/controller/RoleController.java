@@ -12,12 +12,44 @@ import org.springframework.web.bind.annotation.*;
 public class RoleController {
     private final RolePermissionService rolePermissionService;
 
+    @PostMapping("/{roleId}")
+    public ApiResponse<String> addRole(){
+
+
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("ok")
+                .build();
+    }
+
+    @DeleteMapping("/{roleId}")
+    public ApiResponse<String> deleteRole(){
+
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("ok")
+                .build();
+    }
+
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    public ApiResponse<String> assignPermissionForRole(@PathVariable String roleId,
+    public ApiResponse<String> assignPermissionsForRole(@PathVariable String roleId,
                                                        @PathVariable String permissionId,
                                                        @RequestBody AssignPermissionRequest assignPermissionRequest){
 
         boolean result = rolePermissionService.assignPermission(roleId,
+                permissionId, assignPermissionRequest.getScopes());
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message(ApiResponse.setResponseMessage(result))
+                .build();
+    }
+
+    @DeleteMapping("/{roleId}/permissions/{permissionId}")
+    public ApiResponse<String> unassignPermissionsForRole(@PathVariable String roleId,
+                                                       @PathVariable String permissionId,
+                                                       @RequestBody AssignPermissionRequest assignPermissionRequest){
+
+        boolean result = rolePermissionService.unAssignPermission(roleId,
                 permissionId, assignPermissionRequest.getScopes());
         return ApiResponse.<String>builder()
                 .code(200)
