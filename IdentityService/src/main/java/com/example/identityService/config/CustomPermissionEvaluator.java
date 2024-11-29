@@ -1,14 +1,12 @@
 package com.example.identityService.config;
 
+import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.PermissionScope;
 import com.example.identityService.entity.Account;
 import com.example.identityService.entity.Permission;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
-import com.example.identityService.repository.AccountRepository;
-import com.example.identityService.repository.AccountRoleRepository;
-import com.example.identityService.repository.PermissionRepository;
-import com.example.identityService.repository.RolePermissionRepository;
+import com.example.identityService.repository.*;
 import com.example.identityService.service.AccountRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.PermissionEvaluator;
@@ -27,6 +25,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final AccountRoleService accountRoleService;
+    private final RoleRepository roleRepository;
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
@@ -51,6 +50,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
                 .orElseThrow(() -> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
 
         List<String> roleIds = accountRoleService.getAllUserRoleId(foundUser.getId());
+
+        String roleSuperAdminId = roleRepository.findByNameIgnoreCase(EnumRole.SUPPER_ADMIN.name())
+                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND)).getId();
+        if(roleIds.contains(roleSuperAdminId)) return true;
 
         for(String item : roleIds){
             boolean isExistedRole =  rolePermissionRepository

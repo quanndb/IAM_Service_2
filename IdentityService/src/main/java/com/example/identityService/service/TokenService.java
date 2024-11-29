@@ -3,13 +3,9 @@ package com.example.identityService.service;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.AuthenticationProperties;
 import com.example.identityService.entity.Account;
-import com.example.identityService.entity.AccountRole;
-import com.example.identityService.entity.Role;
 import com.example.identityService.DTO.Token;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
-import com.example.identityService.repository.AccountRoleRepository;
-import com.example.identityService.repository.RoleRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -29,7 +25,6 @@ import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor

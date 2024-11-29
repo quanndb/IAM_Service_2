@@ -69,7 +69,7 @@ public class AuthController {
     public ApiResponse<?> getProfile(HttpServletRequest requestHeader){
         return ApiResponse.builder()
                 .code(200)
-                .result(authServiceFactory.getAuthService().getProfile(requestHeader.getHeader("Authorization")))
+                .result(authService.getProfile(requestHeader.getHeader("Authorization")))
                 .build();
     }
 

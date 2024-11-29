@@ -8,7 +8,6 @@ public interface IAuthService{
     Object login(LoginRequest request);
     boolean logout(AppLogoutRequest request);
     boolean register(RegisterRequest request);
-    Object getProfile(String token);
     Object getNewToken(String refreshToken);
 }
 

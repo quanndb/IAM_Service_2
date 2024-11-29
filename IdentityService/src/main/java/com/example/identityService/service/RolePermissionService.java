@@ -20,7 +20,7 @@ public class RolePermissionService {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('accounts', 'CREATE')")
     public boolean assignPermission(String roleId, String permissionId, List<PermissionScope> scopes){
         roleRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
         permissionRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
@@ -40,7 +40,7 @@ public class RolePermissionService {
     }
 
     // un assign
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('accounts', 'DELETE')")
     public boolean unAssignPermission(String roleId, String permissionId, List<PermissionScope> scopes) {
         List<RolePermission> rolePermission = rolePermissionRepository.findAllByRoleIdAndPermissionId(roleId, permissionId);
         List<RolePermission> deleteRolePermission = rolePermission.stream()

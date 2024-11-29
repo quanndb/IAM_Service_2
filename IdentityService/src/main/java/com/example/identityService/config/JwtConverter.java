@@ -1,47 +1,55 @@
 package com.example.identityService.config;
 
+import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.config.properties.JwtConverterProperties;
+import com.example.identityService.entity.Account;
+import com.example.identityService.exception.AppExceptions;
+import com.example.identityService.exception.ErrorCode;
+import com.example.identityService.repository.AccountRepository;
+import lombok.RequiredArgsConstructor;
+import org.keycloak.representations.idm.UserSessionRepresentation;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
+    private final AccountRepository accountRepository;
+    private final KeycloakProvider keycloakProvider;
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-
     private final JwtConverterProperties properties;
-
-    public JwtConverter(JwtConverterProperties properties) {
-        this.properties = properties;
-    }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+        if(!isTokenValid(jwt)) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+
+        String email = jwt.getClaim("email").toString();
+
+        Account foundAccount = accountRepository
+                .findByEmail(email).orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+
+        if(!foundAccount.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
+        if(foundAccount.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
+
         Collection<GrantedAuthority> authorities = Stream.concat(
                 jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
                 extractResourceRoles(jwt).stream()).collect(Collectors.toSet());
-        return new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
-    }
 
-    private String getPrincipalClaimName(Jwt jwt) {
-        String claimName = JwtClaimNames.SUB;
-        if (properties.getPrincipalAttribute() != null) {
-            claimName = properties.getPrincipalAttribute();
-        }
-        return jwt.getClaim(claimName);
+        return new JwtAuthenticationToken(jwt, authorities, jwt.getClaimAsString("email"));
     }
 
     private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
@@ -57,5 +65,13 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return resourceRoles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toSet());
+    }
+
+    private boolean isTokenValid(Jwt token){
+        List<UserSessionRepresentation> sessions = keycloakProvider
+                .getRealmResourceWithAdminPrivilege().users().get(token.getSubject()).getUserSessions();
+
+        return sessions.stream().anyMatch(session -> token.getClaim("sid").toString()
+                .equals(session.getId()));
     }
 }

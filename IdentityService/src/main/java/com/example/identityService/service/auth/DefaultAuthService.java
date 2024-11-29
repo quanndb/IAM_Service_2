@@ -90,6 +90,8 @@ public class DefaultAuthService implements IAuthService {
     public LoginResponse login(LoginRequest request){
         Account account = getAccountByEmail(request.getEmail());
         if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
+        if(!account.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
+        if(account.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
         boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
         if(!success){
             String key = String.join("","login-attempt:", account.getEmail());
@@ -213,7 +215,6 @@ public class DefaultAuthService implements IAuthService {
 
     // -----------------------------User information start-------------------------------
     // profile
-    @Override
     public UserResponse getProfile(String token) {
         Account foundUser = getCurrentUser();
         return UserResponse.builder()
@@ -336,7 +337,7 @@ public class DefaultAuthService implements IAuthService {
 
     public Account getCurrentUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(email.equals("anonymous")) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        if(email.equals("anonymousUser")) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         return getAccountByEmail(email);
     }
 

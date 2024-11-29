@@ -35,6 +35,10 @@ public class Account {
     private String fullname;
     @Column(nullable = false)
     private boolean isVerified;
+    @Column(nullable = false)
+    private boolean isEnable;
+    @Column(nullable = false)
+    private boolean isDeleted;
     @CreatedDate
     private LocalDateTime createdDate;
     @CreatedBy

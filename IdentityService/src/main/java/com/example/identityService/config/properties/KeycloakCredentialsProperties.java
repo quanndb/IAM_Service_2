@@ -16,4 +16,5 @@ public class KeycloakCredentialsProperties {
     private String secret;
     private String scope;
     private String grantType;
+    private String authServer;
 }
