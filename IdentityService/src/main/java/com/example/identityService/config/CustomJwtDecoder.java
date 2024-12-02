@@ -6,8 +6,6 @@ import com.example.identityService.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.stereotype.Component;
-
 
 @RequiredArgsConstructor
 public class CustomJwtDecoder implements JwtDecoder {

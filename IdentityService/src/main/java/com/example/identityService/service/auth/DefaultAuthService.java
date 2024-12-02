@@ -1,14 +1,17 @@
 package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
-import com.example.identityService.DTO.EnumRole;
-import com.example.identityService.DTO.request.*;
+import com.example.identityService.DTO.request.AppLogoutRequest;
+import com.example.identityService.DTO.request.ChangePasswordRequest;
+import com.example.identityService.DTO.request.EmailRequest;
+import com.example.identityService.DTO.request.LoginRequest;
+import com.example.identityService.DTO.request.RegisterRequest;
+import com.example.identityService.DTO.request.UpdateProfileRequest;
 import com.example.identityService.DTO.response.CloudResponse;
 import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.entity.Account;
-import com.example.identityService.entity.AccountRole;
 import com.example.identityService.entity.Logs;
 import com.example.identityService.DTO.Token;
 import com.example.identityService.exception.AppExceptions;
@@ -16,9 +19,7 @@ import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.AccountMapper;
 import com.example.identityService.mapper.CloudImageMapper;
 import com.example.identityService.repository.AccountRepository;
-import com.example.identityService.repository.AccountRoleRepository;
 import com.example.identityService.repository.LoggerRepository;
-import com.example.identityService.repository.RoleRepository;
 import com.example.identityService.service.CloudinaryService;
 import com.example.identityService.service.EmailService;
 import com.example.identityService.service.TokenService;
@@ -41,18 +42,12 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultAuthService implements IAuthService {
+public class DefaultAuthService extends AbstractAuthService {
 
     @NonFinal
     @Value(value = "${app.baseUrl}")
     private String APP_BASEURL;
 
-    @NonFinal
-    @Value(value = "${security.authentication.max-login-attempt}")
-    private Integer MAX_LOGIN_ATTEMPT;
-    @NonFinal
-    @Value(value = "${security.authentication.login-delay-fail}")
-    private String LOGIN_DELAY_FAIL;
     @NonFinal
     @Value(value = "${security.authentication.max-forgot-password-attempt}")
     private Integer MAX_FORGOT_PASSWORD_ATTEMPT;
@@ -78,8 +73,7 @@ public class DefaultAuthService implements IAuthService {
     private final CloudImageMapper cloudImageMapper;
     private final EmailService emailService;
     private final LoggerRepository loggerRepository;
-    private final RoleRepository roleRepository;
-    private final AccountRoleRepository accountRoleRepository;
+
 
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -87,45 +81,8 @@ public class DefaultAuthService implements IAuthService {
 
     // -----------------------------Login logout start-------------------------------
     @Override
-    public LoginResponse login(LoginRequest request){
-        Account account = getAccountByEmail(request.getEmail());
-        if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
-        if(!account.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
-        if(account.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
-        boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
-        if(!success){
-            String key = String.join("","login-attempt:", account.getEmail());
-            String attemptTimeString = redisTemplate.opsForValue()
-                    .get(key);
-
-            if(attemptTimeString != null && Integer.parseInt(attemptTimeString) == MAX_LOGIN_ATTEMPT)
-                throw new AppExceptions(ErrorCode.TOO_MUCH_LOGIN_FAIL);
-            int value = attemptTimeString != null ? Integer.parseInt(attemptTimeString) + 1 : 1;
-            redisTemplate.opsForValue().set(key, Integer.toString(value),
-                    Duration.ofMillis(TimeConverter.convertToMilliseconds(LOGIN_DELAY_FAIL)));
-            throw new AppExceptions(ErrorCode.INVALID_EMAIL_PASSWORD);
-        }
-
-        return loginProcess(account, request.getIp());
-    }
-
-    public LoginResponse loginProcess(Account account, String ip){
-        boolean isNewIp = !loggerRepository.existsByEmailAndIp(account.getEmail(),ip);
-        if(isNewIp){
-            sendConfirmValidIp(account.getEmail(), ip);
-        }
-
-        String accessToken = tokenService.accessTokenFactory(account);
-        String refreshToken = tokenService.generateRefreshToken(account.getEmail(), ip);
-        loggerRepository.save(Logs.builder()
-                .actionName("LOGIN")
-                .email(account.getEmail())
-                .ip(ip)
-                .build());
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+    public LoginResponse performLogin(LoginRequest request){
+       return loginProcess(request.getEmail(), request.getIp());
     }
 
     @Override
@@ -137,53 +94,23 @@ public class DefaultAuthService implements IAuthService {
         return  isDisabledAccessToken && isDisabledRefreshToken;
     }
 
-    public void sendConfirmValidIp(String email, String ip){
-        String verifyToken = tokenService.generateTempEmailToken(email,ip);
-        String verifyUrl = String.join("",APP_BASEURL,"auth/verification?token=",verifyToken);
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.CONFIRM_IP.getSubject(),
-                        String.join(" ",EmailEnum.CONFIRM_IP.getContent(), verifyUrl)
-                        ,List.of(email)));
+    public LoginResponse loginProcess(String email, String ip){
+        Account foundAccount = accountRepository.findByEmail(email)
+                .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        String accessToken = tokenService.accessTokenFactory(foundAccount);
+        String refreshToken = tokenService.generateRefreshToken(email, ip);
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
+
     // -----------------------------Login logout end-------------------------------
 
     // -----------------------------Registration flow start-------------------------------
     @Override
-    public boolean register(RegisterRequest request){
-        accountRepository
-                .findByEmail(request.getEmail())
-                .ifPresent(_ -> {
-                    throw new AppExceptions(ErrorCode.USER_EXISTED);
-                });
-        Account newAccount = accountMapper.toAccount(request);
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        Account savedAccount = accountRepository.save(newAccount);
-        loggerRepository.save(Logs.builder()
-                        .actionName("REGISTRATION")
-                        .email(newAccount.getEmail())
-                        .ip(request.getIp())
-                .build());
-
-        String userRoleId = roleRepository.findByNameIgnoreCase(EnumRole.USER.name())
-                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND)).getId();
-
-        accountRoleRepository.save(AccountRole.builder()
-                        .accountId(savedAccount.getId())
-                        .roleId(userRoleId)
-                .build());
-
-        sendVerifyEmail(newAccount.getEmail(), request.getIp());
+    public boolean performRegister(RegisterRequest request){
         return true;
-    }
-
-    public void sendVerifyEmail(String email, String ip){
-        String verifyToken = tokenService.generateTempEmailToken(email, ip);
-        String verifyUrl = String.join("",APP_BASEURL,"auth/verification?token=",verifyToken);
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.VERIFY_EMAIL.getSubject(),
-                                String.join(" ",EmailEnum.VERIFY_EMAIL.getContent(), verifyUrl)
-                                ,List.of(email)));
     }
 
     public Object verifyEmailAndIP(String token, String ip){
@@ -209,7 +136,7 @@ public class DefaultAuthService implements IAuthService {
                 .ip(ip)
                 .build());
 
-        return loginProcess(account, ip);
+        return loginProcess(account.getEmail(), ip);
     }
     // -----------------------------Registration flow end-------------------------------
 
@@ -217,13 +144,7 @@ public class DefaultAuthService implements IAuthService {
     // profile
     public UserResponse getProfile(String token) {
         Account foundUser = getCurrentUser();
-        return UserResponse.builder()
-                .email(foundUser.getEmail())
-                .address(foundUser.getAddress())
-                .fullname(foundUser.getFullname())
-                .gender(foundUser.getGender())
-                .cloudImageUrl(foundUser.getCloudImageUrl())
-                .build();
+        return accountMapper.toUserResponse(foundUser);
     }
 
     public boolean updateProfile(UpdateProfileRequest request, MultipartFile image) throws IOException {
@@ -352,6 +273,5 @@ public class DefaultAuthService implements IAuthService {
         Account foundAccount = getAccountByEmail(email);
         return tokenService.accessTokenFactory(foundAccount);
     }
-
     // -----------------------------Utilities end-------------------------------
 }

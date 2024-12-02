@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface AccountRoleRepository extends JpaRepository<AccountRole,String> {
     List<AccountRole> findAllByAccountId(String accountId);
+
+    boolean existsByAccountIdAndRoleId(String accountId, String roleId);
 }

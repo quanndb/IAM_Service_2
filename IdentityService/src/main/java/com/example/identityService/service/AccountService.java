@@ -1,19 +1,19 @@
 package com.example.identityService.service;
 
-import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.request.CreateAccountRequest;
+import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.entity.Account;
-import com.example.identityService.entity.AccountRole;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.AccountMapper;
 import com.example.identityService.repository.AccountRepository;
-import com.example.identityService.repository.AccountRoleRepository;
-import com.example.identityService.repository.RoleRepository;
+import com.example.identityService.service.auth.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +22,20 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final PasswordEncoder passwordEncoder;
-    private final RoleRepository roleRepository;
-    private final AccountRoleRepository accountRoleRepository;
+    private final AccountRoleService accountRoleService;
+    private final KeycloakService keycloakService;
 
+    @PreAuthorize("hasPermission('ACCOUNTS', 'READ')")
+    public UserResponse getUserinfo(String accountId){
+        Account foundAccount = accountRepository.findById(accountId)
+                .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        List<String> roles = accountRoleService.getAllUserRole(foundAccount.getId());
+        UserResponse response = accountMapper.toUserResponse(foundAccount);
+        response.setRoles(roles);
+        return response;
+    }
 
-    @PreAuthorize("hasPermission('accounts', 'CREATE')")
+    @PreAuthorize("hasPermission('ACCOUNTS', 'CREATE')")
     public boolean createUser(CreateAccountRequest request){
         accountRepository
                 .findByEmail(request.getEmail())
@@ -38,22 +47,26 @@ public class AccountService {
 
         Account savedAccount = accountRepository.save(newAccount);
 
-        String userRoleId = roleRepository.findByNameIgnoreCase(EnumRole.USER.name())
-                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND)).getId();
-
-        accountRoleRepository.save(AccountRole.builder()
-                .accountId(savedAccount.getId())
-                .roleId(userRoleId)
-                .build());
-
-        return true;
+        return accountRoleService
+                .assignRolesForUser(savedAccount.getId(), request.getRoles()) &&
+                keycloakService.createKeycloakUser(accountMapper.toRegisterRequest(request));
     }
 
-    @PreAuthorize("hasPermission('accounts', 'UPDATE')")
+    @PreAuthorize("hasPermission('ACCOUNTS', 'UPDATE')")
     public boolean setUserEnable(String accountId, boolean enable){
         Account foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setEnable(enable);
+
+        accountRepository.save(foundAccount);
+        return true;
+    }
+
+    @PreAuthorize("hasPermission('ACCOUNTS', 'DELETE')")
+    public boolean deleteUser(String accountId) {
+        Account foundAccount = accountRepository.findById(accountId)
+                .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        foundAccount.setDeleted(true);
 
         accountRepository.save(foundAccount);
         return true;

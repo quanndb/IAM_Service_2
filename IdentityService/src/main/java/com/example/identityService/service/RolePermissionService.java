@@ -20,29 +20,28 @@ public class RolePermissionService {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
-    @PreAuthorize("hasPermission('accounts', 'CREATE')")
-    public boolean assignPermission(String roleId, String permissionId, List<PermissionScope> scopes){
+    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
+    public boolean assignPermission(String roleId, String permissionCode, List<PermissionScope> scopes){
         roleRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
-        permissionRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
+        permissionRepository.findByCodeIgnoreCase(permissionCode).orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
         for(PermissionScope item : scopes){
             boolean foundRolePermission = rolePermissionRepository
-                    .existsByRoleIdAndPermissionIdAndScope(roleId, permissionId, item);
+                    .existsByRoleIdAndPermissionCodeIgnoreCaseAndScope(roleId, permissionCode, item);
             if(!foundRolePermission){
                 rolePermissionRepository.save(RolePermission.builder()
                         .roleId(roleId)
-                        .permissionId(permissionId)
+                        .permissionCode(permissionCode.toUpperCase())
                         .scope(item)
                         .build());
             }
         }
-
         return true;
     }
 
     // un assign
-    @PreAuthorize("hasPermission('accounts', 'DELETE')")
-    public boolean unAssignPermission(String roleId, String permissionId, List<PermissionScope> scopes) {
-        List<RolePermission> rolePermission = rolePermissionRepository.findAllByRoleIdAndPermissionId(roleId, permissionId);
+    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
+    public boolean unAssignPermission(String roleId, String permissionCode, List<PermissionScope> scopes) {
+        List<RolePermission> rolePermission = rolePermissionRepository.findAllByRoleIdAndPermissionCodeIgnoreCase(roleId, permissionCode);
         List<RolePermission> deleteRolePermission = rolePermission.stream()
                 .filter(item -> scopes.contains(item.getScope()))
                 .toList();

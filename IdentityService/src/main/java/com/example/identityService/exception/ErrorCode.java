@@ -35,6 +35,8 @@ public enum ErrorCode {
     UNKNOWN_IP_REQUESTED(417, "Unknown IP has been requested, please confirm in your email", HttpStatus.BAD_REQUEST),
     ACCOUNT_LOCKED(418, "Your account has been locked", HttpStatus.BAD_REQUEST),
     ACCOUNT_DELETED(419, "Your account has been deleted", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_EMPTY(420, "User role is not empty", HttpStatus.BAD_REQUEST),
+    PERMISSION_NOT_EMPTY(421, "User permission is not empty", HttpStatus.BAD_REQUEST),
     ;
 
 

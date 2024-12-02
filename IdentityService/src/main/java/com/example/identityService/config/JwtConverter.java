@@ -1,11 +1,8 @@
 package com.example.identityService.config;
 
-import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.config.properties.JwtConverterProperties;
-import com.example.identityService.entity.Account;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
-import com.example.identityService.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.UserSessionRepresentation;
 import org.springframework.core.convert.converter.Converter;
@@ -28,7 +25,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    private final AccountRepository accountRepository;
     private final KeycloakProvider keycloakProvider;
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
     private final JwtConverterProperties properties;
@@ -36,14 +32,6 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         if(!isTokenValid(jwt)) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
-
-        String email = jwt.getClaim("email").toString();
-
-        Account foundAccount = accountRepository
-                .findByEmail(email).orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-
-        if(!foundAccount.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
-        if(foundAccount.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
 
         Collection<GrantedAuthority> authorities = Stream.concat(
                 jwtGrantedAuthoritiesConverter.convert(jwt).stream(),

@@ -1,10 +1,14 @@
 package com.example.identityService.DTO.request;
 
+import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.Gender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 public class CreateAccountRequest {
@@ -16,8 +20,10 @@ public class CreateAccountRequest {
     private String password;
     @NotBlank(message = "FIELD_NOT_BLANK")
     private String fullname;
-    @NotBlank(message = "FIELD_NOT_BLANK")
-    private boolean isVerified;
+    private Boolean isVerified;
+    private Boolean isEnable;
+    @NotEmpty(message = "ROLE_NOT_EMPTY")
+    private List<EnumRole> roles;
     private Gender gender;
     private String address;
     private String ip;

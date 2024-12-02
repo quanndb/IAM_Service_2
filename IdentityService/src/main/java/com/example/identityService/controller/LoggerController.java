@@ -1,9 +1,8 @@
 package com.example.identityService.controller;
 
-import com.example.identityService.DTO.ApiResponse;
-import com.example.identityService.DTO.request.LogsRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/logs")

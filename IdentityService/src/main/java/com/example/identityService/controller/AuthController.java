@@ -1,7 +1,15 @@
 package com.example.identityService.controller;
 
 import com.example.identityService.DTO.ApiResponse;
-import com.example.identityService.DTO.request.*;
+import com.example.identityService.DTO.request.AppLogoutRequest;
+import com.example.identityService.DTO.request.ChangePasswordRequest;
+import com.example.identityService.DTO.request.ForgotPasswordRequest;
+import com.example.identityService.DTO.request.LoginRequest;
+import com.example.identityService.DTO.request.LogoutRequest;
+import com.example.identityService.DTO.request.RefreshTokenRequest;
+import com.example.identityService.DTO.request.RegisterRequest;
+import com.example.identityService.DTO.request.ResetPasswordRequest;
+import com.example.identityService.DTO.request.UpdateProfileRequest;
 import com.example.identityService.Util.IpChecker;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.Util.ObjectValidator;
@@ -10,7 +18,14 @@ import com.example.identityService.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

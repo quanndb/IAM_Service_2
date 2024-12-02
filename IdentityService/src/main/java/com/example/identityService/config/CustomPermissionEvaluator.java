@@ -6,7 +6,10 @@ import com.example.identityService.entity.Account;
 import com.example.identityService.entity.Permission;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
-import com.example.identityService.repository.*;
+import com.example.identityService.repository.AccountRepository;
+import com.example.identityService.repository.PermissionRepository;
+import com.example.identityService.repository.RolePermissionRepository;
+import com.example.identityService.repository.RoleRepository;
 import com.example.identityService.service.AccountRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.PermissionEvaluator;
@@ -15,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -29,11 +31,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-
-        if(targetDomainObject instanceof String resourceName) {
-            Permission foundResource = permissionRepository.findByNameIgnoreCase(resourceName)
+        if(targetDomainObject instanceof String resourceCode) {
+            Permission foundResource = permissionRepository.findByCodeIgnoreCase(resourceCode)
                     .orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
-            return checkUserPermission(authentication.getName(), foundResource.getId(), permission);
+            return checkUserPermission(authentication.getName(), foundResource.getCode(), permission);
         }
         return false;
     }
@@ -57,7 +58,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
 
         for(String item : roleIds){
             boolean isExistedRole =  rolePermissionRepository
-                    .existsByRoleIdAndPermissionIdAndScope(
+                    .existsByRoleIdAndPermissionCodeIgnoreCaseAndScope(
                             item,
                             resourceId.toString(),
                             foundScope

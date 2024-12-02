@@ -9,7 +9,8 @@ import java.util.List;
 
 @Repository
 public interface RolePermissionRepository extends JpaRepository<RolePermission, String> {
-    List<RolePermission> findAllByRoleIdAndPermissionId(String roleId, String permissionId);
+    List<RolePermission> findAllByRoleIdAndPermissionCodeIgnoreCase(String roleId, String permissionCode);
+    List<RolePermission> findAllByRoleId(String roleId);
 
-    boolean existsByRoleIdAndPermissionIdAndScope(String roleId, String permissionId, PermissionScope scope);
+    boolean existsByRoleIdAndPermissionCodeIgnoreCaseAndScope(String roleId, String permissionId, PermissionScope scope);
 }

@@ -1,7 +1,7 @@
 package com.example.identityService.config.idp_config;
 
+import com.example.identityService.service.auth.AbstractAuthService;
 import com.example.identityService.service.auth.DefaultAuthService;
-import com.example.identityService.service.auth.IAuthService;
 import com.example.identityService.service.auth.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +17,7 @@ public class AuthServiceFactory {
     @Value("${app.idp}")
     private IdpProvider idpProvider;
 
-    public IAuthService getAuthService() {
+    public AbstractAuthService getAuthService() {
         switch (idpProvider) {
             case KEYCLOAK:
                 return keycloakAuthService;
