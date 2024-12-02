@@ -1,7 +1,5 @@
 package com.example.identityService.DTO.request;
 
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter

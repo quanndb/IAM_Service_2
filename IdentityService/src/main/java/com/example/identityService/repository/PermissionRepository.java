@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, String> {
-    Optional<Permission> findByNameIgnoreCase(String name);
+    Optional<Permission> findByCodeIgnoreCase(String name);
 }

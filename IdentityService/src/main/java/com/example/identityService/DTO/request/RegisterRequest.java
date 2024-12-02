@@ -22,4 +22,5 @@ public class RegisterRequest {
     private String fullname;
     private Gender gender;
     private String address;
+    private String ip;
 }

@@ -9,12 +9,9 @@ import com.example.identityService.repository.RolePermissionRepository;
 import com.example.identityService.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,30 +20,33 @@ public class RolePermissionService {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public boolean assignPermission(String roleId, String permissionId, List<PermissionScope> scopes){
+    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
+    public boolean assignPermission(String roleId, String permissionCode, List<PermissionScope> scopes){
         roleRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
-        permissionRepository.findById(roleId).orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
+        permissionRepository.findByCodeIgnoreCase(permissionCode).orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
         for(PermissionScope item : scopes){
             boolean foundRolePermission = rolePermissionRepository
-                    .existsByRoleIdAndPermissionIdAndScope(roleId, permissionId, item);
+                    .existsByRoleIdAndPermissionCodeIgnoreCaseAndScope(roleId, permissionCode, item);
             if(!foundRolePermission){
                 rolePermissionRepository.save(RolePermission.builder()
                         .roleId(roleId)
-                        .permissionId(permissionId)
+                        .permissionCode(permissionCode.toUpperCase())
                         .scope(item)
                         .build());
             }
         }
-
         return true;
     }
 
     // un assign
-    public boolean unAssignPermission(String roleId, String permissionId) {
-        RolePermission rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId)
-                .orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_PERMISSION_NOTFOUND));
-        rolePermissionRepository.delete(rolePermission);
+    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
+    public boolean unAssignPermission(String roleId, String permissionCode, List<PermissionScope> scopes) {
+        List<RolePermission> rolePermission = rolePermissionRepository.findAllByRoleIdAndPermissionCodeIgnoreCase(roleId, permissionCode);
+        List<RolePermission> deleteRolePermission = rolePermission.stream()
+                .filter(item -> scopes.contains(item.getScope()))
+                .toList();
+
+        rolePermissionRepository.deleteAll(deleteRolePermission);
         return true;
     }
 }
