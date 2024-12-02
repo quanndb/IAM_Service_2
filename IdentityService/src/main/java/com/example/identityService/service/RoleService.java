@@ -30,6 +30,10 @@ public class RoleService {
 
     @PreAuthorize("hasPermission('ROLES', 'CREATE')")
     public boolean createRole(CreateRoleRequest request){
+        roleRepository.findByNameIgnoreCase(request.getName())
+                        .ifPresent( _ -> {
+                            throw new AppExceptions(ErrorCode.ROLE_EXISTED);
+                        });
         roleRepository.save(Role.builder()
                         .name(request.getName())
                         .description(request.getDescription())

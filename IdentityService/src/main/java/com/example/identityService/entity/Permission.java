@@ -27,4 +27,6 @@ public class Permission extends Auditable{
     private String name;
     @Column(nullable = false)
     private String code;
+    @Column(nullable = false)
+    private boolean isDeleted;
 }

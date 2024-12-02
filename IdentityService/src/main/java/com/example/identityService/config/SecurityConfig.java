@@ -28,6 +28,9 @@ public class SecurityConfig {
 
     String[] PUBLIC_ENDPOINTS = {
             "/auth/**",
+            "swagger-ui/**",
+            "api-docs/**",
+            "v3/api-docs/**",
     };
 
     @Value("${app.idp}")

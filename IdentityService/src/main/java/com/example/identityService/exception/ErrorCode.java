@@ -37,6 +37,8 @@ public enum ErrorCode {
     ACCOUNT_DELETED(419, "Your account has been deleted", HttpStatus.BAD_REQUEST),
     ROLE_NOT_EMPTY(420, "User role is not empty", HttpStatus.BAD_REQUEST),
     PERMISSION_NOT_EMPTY(421, "User permission is not empty", HttpStatus.BAD_REQUEST),
+    ROLE_EXISTED(422, "This role is existed", HttpStatus.BAD_REQUEST),
+    PERMISSION_EXISTED(423, "This permission is existed", HttpStatus.BAD_REQUEST),
     ;
 
 
