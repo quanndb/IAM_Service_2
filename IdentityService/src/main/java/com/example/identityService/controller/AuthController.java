@@ -110,7 +110,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO, HttpServletRequest request){
         String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = authService
+        boolean result = authServiceFactory.getAuthService()
                 .resetPassword(passwordRequestDTO.getToken(),
                         passwordRequestDTO.getNewPassword(), ip);
         return ApiResponse.<Boolean>builder()
@@ -140,7 +140,8 @@ public class AuthController {
     @PutMapping("/me/change-password")
     public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO, HttpServletRequest request){
         String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = authService.changePassword(changePasswordDTO, ip);
+        boolean result = authServiceFactory.getAuthService()
+                .changePassword(changePasswordDTO, ip);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

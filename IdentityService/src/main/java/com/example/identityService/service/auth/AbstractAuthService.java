@@ -2,7 +2,9 @@ package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.EnumRole;
+import com.example.identityService.DTO.Token;
 import com.example.identityService.DTO.request.AppLogoutRequest;
+import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
@@ -23,11 +25,14 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class AbstractAuthService{
 
@@ -37,6 +42,8 @@ public abstract class AbstractAuthService{
     private Integer MAX_LOGIN_ATTEMPT;
     @Value(value = "${security.authentication.login-delay-fail}")
     private String LOGIN_DELAY_FAIL;
+    @Value(value = "${security.authentication.jwt.email-token-life-time}")
+    private String EMAIL_TOKEN_LIFE_TIME;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -57,14 +64,66 @@ public abstract class AbstractAuthService{
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-
     public abstract Object performLogin(LoginRequest request);
     public abstract boolean logout(AppLogoutRequest request);
-    public abstract boolean performRegister(RegisterRequest request);
+    public abstract boolean performResetPassword(String email, String newPassword);
     public abstract Object getNewToken(String refreshToken);
+    public abstract boolean performChangePassword(String email, String oldPassword, String newPassword);
+
+    public boolean changePassword(ChangePasswordRequest request, String ip){
+        String currentPassword = request.getCurrentPassword();
+        String newPassword = request.getNewPassword();
+        if(currentPassword.equals(newPassword)) throw new AppExceptions(ErrorCode.PASSWORD_MUST_DIFFERENCE);
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Account foundUser = accountRepository.findByEmail(email)
+                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        boolean isCorrectPassword = passwordEncoder.matches(request.getCurrentPassword(), foundUser.getPassword());
+        if(!isCorrectPassword) throw new AppExceptions(ErrorCode.WRONG_PASSWORD);
+
+        foundUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        accountRepository.save(foundUser);
+
+        loggerRepository.save(Logs.builder()
+                .actionName("CHANGE_PASSWORD")
+                .email(foundUser.getEmail())
+                .ip(ip)
+                .build());
+        return performChangePassword(email, request.getCurrentPassword(), request.getNewPassword());
+    }
+
+    public boolean resetPassword(String token, String newPassword, String ip){
+        String email = tokenService.getTokenDecoded(token).getSubject();
+
+        String key = String.join("","forgot-password-attempt:", email);
+        String attempValueString = redisTemplate.opsForValue().get(key);
+
+        String activeToken = attempValueString != null ? attempValueString.split("@")[1] : null;
+        if(!tokenService.verifyToken(token) || email == null || !Objects.equals(activeToken, token))
+            throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+
+        tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
+
+        Account foundAccount = accountRepository.findByEmail(email)
+                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        foundAccount.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(foundAccount);
+
+        loggerRepository.save(Logs.builder()
+                .actionName("RESET_PASSWORD")
+                .email(email)
+                .ip(ip)
+                .build());
+        sendResetPasswordSuccess(email);
+
+        return performResetPassword(foundAccount.getEmail(), newPassword);
+    }
 
     public Object login(LoginRequest request){
-        boolean result = checkUserStatus(request.getEmail());
+        Account foundAccount = accountRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        boolean result = isValidUserStatus(foundAccount);
         if(result){
             Account account = accountRepository
                     .findByEmail(request.getEmail()).orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
@@ -98,7 +157,7 @@ public abstract class AbstractAuthService{
     }
 
     public boolean register(RegisterRequest request){
-        return createAppUser(request) && createKeycloakUser(request) && performRegister(request);
+        return createAppUser(request) && createKeycloakUser(request);
     }
 
     public boolean createAppUser(RegisterRequest request){
@@ -144,12 +203,10 @@ public abstract class AbstractAuthService{
         return true;
     }
 
-    public boolean checkUserStatus(String email){
-        Account foundAccount = accountRepository
-                .findByEmail(email).orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        if(!foundAccount.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
-        if(!foundAccount.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
-        if(foundAccount.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
+    public static boolean isValidUserStatus(Account account){
+        if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
+        if(!account.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);
+        if(account.isDeleted()) throw new AppExceptions(ErrorCode.ACCOUNT_DELETED);
         return true;
     }
 
@@ -168,6 +225,13 @@ public abstract class AbstractAuthService{
         emailService
                 .sendEmail(new EmailRequest(EmailEnum.CONFIRM_IP.getSubject(),
                         String.join(" ",EmailEnum.CONFIRM_IP.getContent(), verifyUrl)
+                        ,List.of(email)));
+    }
+
+    public void sendResetPasswordSuccess(String email){
+        emailService
+                .sendEmail(new EmailRequest(EmailEnum.RESET_PASSWORD_SUCCESS.getSubject(),
+                        String.join(" ",EmailEnum.RESET_PASSWORD_SUCCESS.getContent(), LocalDateTime.now().toString())
                         ,List.of(email)));
     }
 }

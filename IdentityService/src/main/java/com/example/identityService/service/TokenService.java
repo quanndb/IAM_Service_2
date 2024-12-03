@@ -4,12 +4,11 @@ import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.AuthenticationProperties;
 import com.example.identityService.entity.Account;
 import com.example.identityService.DTO.Token;
-import com.example.identityService.exception.AppExceptions;
-import com.example.identityService.exception.ErrorCode;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,6 +74,7 @@ public class TokenService implements InitializingBean {
         // build token
         return Jwts.builder()
                 .subject(account.getEmail())
+                .claim("email",account.getEmail())
                 .issuer("DevDeli")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)))
@@ -89,6 +89,7 @@ public class TokenService implements InitializingBean {
         // build token
         return Jwts.builder()
                 .subject(email)
+                .claim("email",email)
                 .issuer("DevDeli")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(liveTime)))
@@ -115,17 +116,20 @@ public class TokenService implements InitializingBean {
             return Jwts.parser().verifyWith(keyPair.getPublic())
                     .build().parseSignedClaims(token).getPayload();
         }
-        catch (ExpiredJwtException exception){
-            throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        catch (ExpiredJwtException | SignatureException exception){
+            return null;
         }
     }
 
     public boolean isTokenExpired(String token){
-        return extractClaims(token).getExpiration().before(new Date());
+        Claims claims = extractClaims(token);
+        return claims != null && claims.getExpiration().before(new Date());
     }
 
     public boolean isLogout(String token){
-        String tokenId = extractClaims(token).getId();
+        Claims claims = extractClaims(token);
+        String tokenId = claims == null ? null : claims.getId();
+        if(tokenId == null) return false;
         String valueOfLogoutToken = redisTemplate.opsForValue().get("token_id:"+tokenId);
         return valueOfLogoutToken != null;
     }

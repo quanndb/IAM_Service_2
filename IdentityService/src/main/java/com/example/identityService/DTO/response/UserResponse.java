@@ -18,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
+    private String id;
     private String email;
     private String fullname;
     private String address;

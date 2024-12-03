@@ -2,12 +2,18 @@ package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.LoginRequest;
-import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.config.KeycloakProvider;
+import com.example.identityService.exception.AppExceptions;
+import com.example.identityService.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +52,21 @@ public class KeycloakService extends AbstractAuthService{
     }
 
     @Override
-    public boolean performRegister(RegisterRequest request) {
+    public boolean performResetPassword(String email, String newPassword) {
+        UsersResource usersResource = keycloakProvider.getRealmResourceWithAdminPrivilege().users();
+        List<UserRepresentation> users = usersResource.search(email, true);
+        if (!users.isEmpty()) {
+            UserRepresentation user = users.getFirst();
+
+            CredentialRepresentation credentials = new CredentialRepresentation();
+            credentials.setTemporary(false);
+            credentials.setType(CredentialRepresentation.PASSWORD);
+            credentials.setValue(newPassword);
+
+            usersResource.get(user.getId()).resetPassword(credentials);
+        } else {
+            throw new AppExceptions(ErrorCode.NOTFOUND_EMAIL);
+        }
         return true;
     }
 
@@ -62,5 +82,10 @@ public class KeycloakService extends AbstractAuthService{
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Object.class).block();
+    }
+
+    @Override
+    public boolean performChangePassword(String email, String oldPassword, String newPassword) {
+        return performResetPassword(email, newPassword);
     }
 }

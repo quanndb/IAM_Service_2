@@ -1,10 +1,14 @@
 package com.example.identityService.controller;
 
 import com.example.identityService.DTO.ApiResponse;
+import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.AssignPermissionRequest;
 import com.example.identityService.DTO.request.CreateRoleRequest;
+import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.entity.Role;
 import com.example.identityService.service.RolePermissionService;
 import com.example.identityService.service.RoleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -23,6 +28,18 @@ import java.util.List;
 public class RoleController {
     private final RolePermissionService rolePermissionService;
     private final RoleService roleService;
+
+    @GetMapping
+    public ApiResponse<PageResponse<Role>> getRoles(@RequestParam(required = false, defaultValue = "1") int page,
+                                                    @RequestParam(required = false, defaultValue = "10") int size,
+                                                    @RequestParam(required = false, defaultValue = "") String query,
+                                                    @RequestParam(required = false, defaultValue = "id") String sortedBy,
+                                                    @RequestParam(required = false, defaultValue = "DESC") EnumSortDirection sortDirection) throws JsonProcessingException {
+        return ApiResponse.<PageResponse<Role>>builder()
+                .code(200)
+                .result(roleService.getRoles(page, size, query, sortedBy, sortDirection))
+                .build();
+    }
 
     @GetMapping("{roleId}")
     public ApiResponse<List<String>> getAllPermissionOfRole(@PathVariable String roleId){

@@ -1,0 +1,139 @@
+2024-12-03 14:33:21 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2024-12-03 14:33:21 [main] INFO  c.e.i.IdentityServiceApplication - Starting IdentityServiceApplication using Java 23.0.1 with PID 15124 (C:\Data\IAM_Service_2\IdentityService\build\classes\java\main started by Vu Minh Quan in C:\Data\IAM_Service_2\IdentityService)
+2024-12-03 14:33:21 [main] DEBUG c.e.i.IdentityServiceApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-12-03 14:33:21 [main] INFO  c.e.i.IdentityServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 256 ms. Found 6 JPA repository interfaces.
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.LoggerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.PermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RolePermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:33:23 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 0 Redis repository interfaces.
+2024-12-03 14:33:23 [main] INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=64c8b2ac-cd62-3fca-9e32-c5788d5e4af3
+2024-12-03 14:33:24 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 2818 (http)
+2024-12-03 14:33:24 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:33:24 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2024-12-03 14:33:24 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2024-12-03 14:33:24 [main] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring embedded WebApplicationContext
+2024-12-03 14:33:24 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3416 ms
+2024-12-03 14:33:25 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-03 14:33:25 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4ff0706c
+2024-12-03 14:33:25 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-03 14:33:25 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-03 14:33:25 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-12-03 14:33:25 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2024-12-03 14:33:26 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-03 14:33:28 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-03 14:33:28 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 14:33:28 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-03 14:33:28 [main] DEBUG c.e.i.config.UserFilter - Filter 'userFilter' configured for use
+2024-12-03 14:33:32 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:33:32 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 2818 (http) with context path '/api/v1.0.0'
+2024-12-03 14:33:32 [main] INFO  c.e.i.IdentityServiceApplication - Started IdentityServiceApplication in 11.638 seconds (process running for 13.243)
+2024-12-03 14:33:58 [http-nio-2818-exec-1] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-12-03 14:33:58 [http-nio-2818-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-12-03 14:33:58 [http-nio-2818-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2024-12-03 14:33:58 [http-nio-2818-exec-1] INFO  c.e.i.config.LoggingFilter - Request - Method: POST, URI: /api/v1.0.0/auth/login, Params: org.apache.catalina.util.ParameterMap@21a3aea4
+2024-12-03 14:34:00 [http-nio-2818-exec-1] INFO  c.e.i.config.LoggingFilter - Response - Status: 200
+2024-12-03 14:38:36 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 14:38:36 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2024-12-03 14:38:36 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2024-12-03 14:38:44 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2024-12-03 14:38:44 [main] INFO  c.e.i.IdentityServiceApplication - Starting IdentityServiceApplication using Java 23.0.1 with PID 1268 (C:\Data\IAM_Service_2\IdentityService\build\classes\java\main started by Vu Minh Quan in C:\Data\IAM_Service_2\IdentityService)
+2024-12-03 14:38:44 [main] DEBUG c.e.i.IdentityServiceApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-12-03 14:38:44 [main] INFO  c.e.i.IdentityServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 284 ms. Found 6 JPA repository interfaces.
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.LoggerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.PermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RolePermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:38:47 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 19 ms. Found 0 Redis repository interfaces.
+2024-12-03 14:38:48 [main] INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=64c8b2ac-cd62-3fca-9e32-c5788d5e4af3
+2024-12-03 14:38:49 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 2818 (http)
+2024-12-03 14:38:49 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:38:49 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2024-12-03 14:38:49 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2024-12-03 14:38:49 [main] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring embedded WebApplicationContext
+2024-12-03 14:38:49 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 4080 ms
+2024-12-03 14:38:49 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-03 14:38:49 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@73958426
+2024-12-03 14:38:49 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-03 14:38:49 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-03 14:38:50 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-12-03 14:38:50 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2024-12-03 14:38:50 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-03 14:38:53 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-03 14:38:53 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 14:38:54 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-03 14:38:54 [main] DEBUG c.e.i.config.UserFilter - Filter 'userFilter' configured for use
+2024-12-03 14:38:57 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:38:57 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 2818 (http) with context path '/api/v1.0.0'
+2024-12-03 14:38:57 [main] INFO  c.e.i.IdentityServiceApplication - Started IdentityServiceApplication in 14.255 seconds (process running for 15.88)
+2024-12-03 14:39:00 [http-nio-2818-exec-2] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-12-03 14:39:00 [http-nio-2818-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-12-03 14:39:00 [http-nio-2818-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2024-12-03 14:43:44 [HikariPool-1 housekeeper] WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4m54s109ms973µs900ns).
+2024-12-03 14:43:44 [http-nio-2818-exec-2] INFO  c.e.i.config.LoggingFilter - Request - Method: POST, URI: /api/v1.0.0/auth/login, Params: {}
+2024-12-03 14:43:49 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 14:43:49 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2024-12-03 14:43:49 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2024-12-03 14:43:50 [http-nio-2818-exec-2] ERROR c.e.i.e.GlobalExceptionHandler - org.springframework.boot.context.properties.ConfigurationPropertiesBindException: Error creating bean with name 'spring.datasource-org.springframework.boot.autoconfigure.jdbc.DataSourceProperties': Could not bind properties to 'DataSourceProperties' : prefix=spring.datasource, ignoreInvalidFields=false, ignoreUnknownFields=true
+2024-12-03 14:43:51 [http-nio-2818-exec-2] INFO  c.e.i.config.LoggingFilter - Response - Status: 500
+2024-12-03 14:43:58 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2024-12-03 14:43:58 [main] INFO  c.e.i.IdentityServiceApplication - Starting IdentityServiceApplication using Java 23.0.1 with PID 13148 (C:\Data\IAM_Service_2\IdentityService\build\classes\java\main started by Vu Minh Quan in C:\Data\IAM_Service_2\IdentityService)
+2024-12-03 14:43:58 [main] DEBUG c.e.i.IdentityServiceApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-12-03 14:43:58 [main] INFO  c.e.i.IdentityServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 286 ms. Found 6 JPA repository interfaces.
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.AccountRoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.LoggerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.PermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RolePermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.identityService.repository.RoleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2024-12-03 14:44:00 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 0 Redis repository interfaces.
+2024-12-03 14:44:01 [main] INFO  o.s.cloud.context.scope.GenericScope - BeanFactory id=64c8b2ac-cd62-3fca-9e32-c5788d5e4af3
+2024-12-03 14:44:02 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 2818 (http)
+2024-12-03 14:44:02 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:44:02 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2024-12-03 14:44:02 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2024-12-03 14:44:02 [main] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring embedded WebApplicationContext
+2024-12-03 14:44:02 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3751 ms
+2024-12-03 14:44:02 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2024-12-03 14:44:03 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@441aa7ae
+2024-12-03 14:44:03 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2024-12-03 14:44:03 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-03 14:44:03 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-12-03 14:44:03 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2024-12-03 14:44:03 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-03 14:44:05 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-03 14:44:05 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-03 14:44:06 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2024-12-03 14:44:06 [main] DEBUG c.e.i.config.UserFilter - Filter 'userFilter' configured for use
+2024-12-03 14:44:09 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-2818"]
+2024-12-03 14:44:09 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 2818 (http) with context path '/api/v1.0.0'
+2024-12-03 14:44:09 [main] INFO  c.e.i.IdentityServiceApplication - Started IdentityServiceApplication in 11.999 seconds (process running for 13.494)
+2024-12-03 14:44:11 [http-nio-2818-exec-2] INFO  o.a.c.c.C.[.[.[/api/v1.0.0] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2024-12-03 14:44:11 [http-nio-2818-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2024-12-03 14:44:11 [http-nio-2818-exec-2] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2024-12-03 14:44:12 [http-nio-2818-exec-2] INFO  c.e.i.config.LoggingFilter - Request - Method: POST, URI: /api/v1.0.0/auth/login, Params: org.apache.catalina.util.ParameterMap@7abb3cb6
+2024-12-03 14:44:13 [http-nio-2818-exec-2] INFO  c.e.i.config.LoggingFilter - Response - Status: 200
+2024-12-03 14:45:29 [http-nio-2818-exec-6] INFO  c.e.i.config.LoggingFilter - Request - Method: GET, URI: /api/v1.0.0/roles, Params: org.apache.catalina.util.ParameterMap@720139a3
+2024-12-03 14:45:29 [http-nio-2818-exec-6] INFO  c.e.i.config.LoggingFilter - Response - Status: 200
+2024-12-03 14:45:43 [http-nio-2818-exec-7] INFO  c.e.i.config.LoggingFilter - Request - Method: GET, URI: /api/v1.0.0/roles, Params: org.apache.catalina.util.ParameterMap@5b333070
+2024-12-03 14:45:43 [http-nio-2818-exec-7] ERROR c.e.i.e.GlobalExceptionHandler - org.springframework.web.method.annotation.MethodArgumentTypeMismatchException: Method parameter 'sortDirection': Failed to convert value of type 'java.lang.String' to required type 'com.example.identityService.DTO.EnumSortDirection'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.RequestParam com.example.identityService.DTO.EnumSortDirection] for value [dsad]
+2024-12-03 14:45:43 [http-nio-2818-exec-7] INFO  c.e.i.config.LoggingFilter - Response - Status: 500

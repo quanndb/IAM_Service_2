@@ -1,8 +1,8 @@
 package com.example.identityService.config;
 
-import com.example.identityService.exception.AppExceptions;
-import com.example.identityService.exception.ErrorCode;
+import com.example.identityService.exception.JwtAuthenticationException;
 import com.example.identityService.service.TokenService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -15,8 +15,16 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token){
         boolean isValidToken = tokenService.verifyToken(token);
-        var scopeClaim = tokenService.extractClaims(token).get("scope");
-        if(!isValidToken || scopeClaim == null) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        Claims claims = tokenService.extractClaims(token);
+        var scopeClaim = claims == null ? null : claims.get("scope");
+
+        if (!isValidToken || scopeClaim == null) {
+            try {
+                throw new JwtAuthenticationException("Invalid token or missing scope claim");
+            } catch (JwtAuthenticationException _) {
+            }
+        }
+
         return tokenService.getTokenDecoded(token);
     }
 }

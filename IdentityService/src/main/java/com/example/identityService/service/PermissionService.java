@@ -1,21 +1,29 @@
 package com.example.identityService.service;
 
+import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreatePermissionRequest;
+import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Permission;
+import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.PermissionMapper;
 import com.example.identityService.repository.PermissionRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PermissionService {
 
-    PermissionRepository permissionRepository;
-    PermissionMapper permissionMapper;
+    private final PermissionRepository permissionRepository;
+    private final PermissionMapper permissionMapper;
+    private final JsonMapper jsonMapper;
 
     @PreAuthorize("hasPermission('ROLES', 'CREATE')")
     public boolean createPermission(CreatePermissionRequest request){
@@ -46,5 +54,26 @@ public class PermissionService {
         foundPermission.setDeleted(true);
         permissionRepository.save(foundPermission);
         return true;
+    }
+
+    @PreAuthorize("hasPermission('ROLES', 'READ')")
+    public PageResponse<Permission> getPermissions(int page, int size, String query, String sortedBy, EnumSortDirection sortDirection) throws JsonProcessingException {
+        var res = permissionRepository.getPermissionData(page, size, query, sortedBy, sortDirection.name());
+        int totalRecords = (int) res.getFirst()[0];
+        String permissionJson = (String) res.getFirst()[1];
+        List<Permission> permissionList = jsonMapper
+                .JSONToList(permissionJson == null? "[]" : permissionJson, Permission.class);
+        return PageResponse.<Permission>builder()
+                .page(page)
+                .size(size)
+                .query(query)
+                .sortedBy(sortedBy)
+                .sortDirection(sortDirection.name())
+                .isFirst(page == 1)
+                .isLast(page % size == page)
+                .totalRecords(totalRecords)
+                .totalPages(page % size)
+                .response(permissionList)
+                .build();
     }
 }

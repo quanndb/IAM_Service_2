@@ -5,7 +5,6 @@ import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
-import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
 import com.example.identityService.DTO.response.CloudResponse;
 import com.example.identityService.DTO.response.LoginResponse;
@@ -35,7 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,9 +59,6 @@ public class DefaultAuthService extends AbstractAuthService {
     @NonFinal
     @Value(value = "${security.authentication.jwt.refresh-token-life-time}")
     private String REFRESH_TOKEN_LIFE_TIME;
-    @NonFinal
-    @Value(value = "${security.authentication.jwt.email-token-life-time}")
-    private String EMAIL_TOKEN_LIFE_TIME;
 
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
@@ -108,13 +103,10 @@ public class DefaultAuthService extends AbstractAuthService {
     // -----------------------------Login logout end-------------------------------
 
     // -----------------------------Registration flow start-------------------------------
-    @Override
-    public boolean performRegister(RegisterRequest request){
-        return true;
-    }
 
     public Object verifyEmailAndIP(String token, String ip){
         Claims claims = tokenService.extractClaims(token);
+        if(claims == null) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         String email = claims.getSubject();
         String ipFromToken = claims.get("IP").toString();
         if(!tokenService.verifyToken(token) || !ip.equals(ipFromToken))
@@ -167,23 +159,8 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     // password
-    public boolean changePassword(ChangePasswordRequest request, String ip) {
-        String currentPassword = request.getCurrentPassword();
-        String newPassword = request.getNewPassword();
-        if(currentPassword.equals(newPassword)) throw new AppExceptions(ErrorCode.PASSWORD_MUST_DIFFERENCE);
-
-        Account foundUser = getCurrentUser();
-        boolean isCorrectPassword = passwordEncoder.matches(request.getCurrentPassword(), foundUser.getPassword());
-        if(!isCorrectPassword) throw new AppExceptions(ErrorCode.WRONG_PASSWORD);
-
-        foundUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        accountRepository.save(foundUser);
-
-        loggerRepository.save(Logs.builder()
-                .actionName("CHANGE_PASSWORD")
-                .email(foundUser.getEmail())
-                .ip(ip)
-                .build());
+    @Override
+    public boolean performChangePassword(String email, String oldPassword, String newPassword) {
         return true;
     }
 
@@ -193,29 +170,8 @@ public class DefaultAuthService extends AbstractAuthService {
         return true;
     }
 
-    public boolean resetPassword(String token, String newPassword, String ip) {
-        String email = tokenService.getTokenDecoded(token).getSubject();
-
-        String key = String.join("","forgot-password-attempt:", email);
-        String attempValueString = redisTemplate.opsForValue().get(key);
-
-        String activeToken = attempValueString != null ? attempValueString.split("@")[1] : null;
-        if(!tokenService.verifyToken(token) || email == null || !Objects.equals(activeToken, token))
-            throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
-
-        Account foundAccount = getAccountByEmail(email);
-        foundAccount.setPassword(passwordEncoder.encode(newPassword));
-        accountRepository.save(foundAccount);
-
-        loggerRepository.save(Logs.builder()
-                .actionName("RESET_PASSWORD")
-                .email(foundAccount.getEmail())
-                .ip(ip)
-                .build());
-
-        tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
-
-        sendResetPasswordSuccess(email);
+    @Override
+    public boolean performResetPassword(String email, String newPassword) {
         return true;
     }
 
@@ -242,12 +198,6 @@ public class DefaultAuthService extends AbstractAuthService {
                         ,List.of(email)));
     }
 
-    public void sendResetPasswordSuccess(String email){
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.RESET_PASSWORD_SUCCESS.getSubject(),
-                        String.join(" ",EmailEnum.RESET_PASSWORD_SUCCESS.getContent(), LocalDateTime.now().toString())
-                        ,List.of(email)));
-    }
     // -----------------------------User information end-------------------------------
 
     // -----------------------------Utilities start-------------------------------
