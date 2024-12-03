@@ -2,7 +2,6 @@ package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.request.AppLogoutRequest;
-import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
