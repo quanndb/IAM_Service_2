@@ -1,14 +1,13 @@
 package com.example.identityService.DTO;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum PermissionScope {
-    READ("READ"),
     CREATE("CREATE"),
+    READ("READ"),
     UPDATE("UPDATE"),
     DELETE("DELETE");
 

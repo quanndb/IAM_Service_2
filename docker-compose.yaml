@@ -34,18 +34,17 @@ services:
       start-dev
       --http-relative-path /auth
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin            
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin   
-      KC_DB: postgres                
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak 
-      KC_DB_USERNAME: root            
-      KC_DB_PASSWORD: Quandz@@2083     
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: root
+      KC_DB_PASSWORD: Quandz@@2083
     ports:
-      - "8081:8080"  
-    depends_on:
-      - postgres  
+      - "8081:8080"
+    restart: always
     networks:
-      - quanndb_network 
+      - quanndb_network
 
   identity-service:
     image: devdeli/identity-service:latest
