@@ -1,7 +1,6 @@
 package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
-import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
@@ -80,10 +79,10 @@ public class DefaultAuthService extends AbstractAuthService {
     }
 
     @Override
-    public boolean logout(AppLogoutRequest request) {
-        boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(request.getAccessToken(),
+    public boolean logout(String accessToken, String refreshToken) {
+        boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(accessToken,
                 TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)));
-        boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(request.getRefreshToken(),
+        boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(refreshToken,
                 TimeConverter.convertToMilliseconds(REFRESH_TOKEN_LIFE_TIME)));
         return  isDisabledAccessToken && isDisabledRefreshToken;
     }

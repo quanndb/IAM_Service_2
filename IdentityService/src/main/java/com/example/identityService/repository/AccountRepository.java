@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRepository extends JpaRepository<Account, String> {
+public interface AccountRepository extends JpaRepository<Account, String>, CustomAccountRepository {
     Optional<Account> findByEmail(String email);
 
     @Query(value = "SELECT * FROM get_account_data(:page, :size, :query, :sortedBy, :sortDirection)", nativeQuery = true)

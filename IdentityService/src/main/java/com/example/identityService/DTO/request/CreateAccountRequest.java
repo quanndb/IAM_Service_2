@@ -1,6 +1,5 @@
 package com.example.identityService.DTO.request;
 
-import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.Gender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -20,10 +19,10 @@ public class CreateAccountRequest {
     private String password;
     @NotBlank(message = "FIELD_NOT_BLANK")
     private String fullname;
-    private Boolean isVerified;
-    private Boolean isEnable;
+    private Boolean verified;
+    private Boolean enable;
     @NotEmpty(message = "ROLE_NOT_EMPTY")
-    private List<EnumRole> roles;
+    private List<String> roles;
     private Gender gender;
     private String address;
     private String ip;

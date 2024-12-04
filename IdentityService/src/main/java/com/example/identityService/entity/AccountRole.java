@@ -22,9 +22,11 @@ import lombok.RequiredArgsConstructor;
 public class AccountRole extends Auditable{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    private String id;
     @Column(nullable = false)
-    String accountId;
+    private String accountId;
     @Column(nullable = false)
-    String roleId;
+    private String roleId;
+    @Column(nullable = false)
+    private boolean deleted;
 }

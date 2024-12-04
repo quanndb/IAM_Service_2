@@ -17,9 +17,9 @@ public class PageResponse<T> {
     private int page;
     private int size;
     private int totalPages;
-    private int totalRecords;
-    private boolean isLast;
-    private boolean isFirst;
+    private long totalRecords;
+    private boolean last;
+    private boolean first;
     private String query;
     private String sortedBy;
     private String sortDirection;

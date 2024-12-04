@@ -3,7 +3,6 @@ package com.example.identityService.service.auth;
 import com.example.identityService.DTO.EmailEnum;
 import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.Token;
-import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
@@ -65,7 +64,7 @@ public abstract class AbstractAuthService{
     private RedisTemplate<String, String> redisTemplate;
 
     public abstract Object performLogin(LoginRequest request);
-    public abstract boolean logout(AppLogoutRequest request);
+    public abstract boolean logout(String accessToken, String refreshToken);
     public abstract boolean performResetPassword(String email, String newPassword);
     public abstract Object getNewToken(String refreshToken);
     public abstract boolean performChangePassword(String email, String oldPassword, String newPassword);
@@ -177,7 +176,7 @@ public abstract class AbstractAuthService{
                 .ip(request.getIp())
                 .build());
 
-        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER));
+        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
 
         sendVerifyEmail(newAccount.getEmail(), request.getIp());
         return true;

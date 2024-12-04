@@ -1,6 +1,5 @@
 package com.example.identityService.service.auth;
 
-import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.config.KeycloakProvider;
 import com.example.identityService.exception.AppExceptions;
@@ -36,15 +35,15 @@ public class KeycloakService extends AbstractAuthService{
     }
 
     @Override
-    public boolean logout(AppLogoutRequest request) {
+    public boolean logout(String accessToken, String refreshToken) {
         String body = String.format("client_id=%s&client_secret=%s&refresh_token=%s",
-                CLIENT_ID, CLIENT_SECRET, request.getRefreshToken());
+                CLIENT_ID, CLIENT_SECRET, refreshToken);
 
         WebClient.create(KEYCLOAK_AUTH_URL)
                 .post()
                 .uri("/realms/IAM2/protocol/openid-connect/logout")
                 .header("Content-Type", "application/x-www-form-urlencoded",
-                                    "Authorization", "Bear " + request.getAccessToken())
+                                    "Authorization", "Bear " + accessToken)
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Object.class).block();

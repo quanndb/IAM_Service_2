@@ -7,7 +7,8 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class AssignPermissionRequest {
+public class DetailsAssignPermissionRequest {
+    String permissionCode;
     @NotEmpty(message = "PERMISSION_NOT_EMPTY")
     List<PermissionScope> scopes;
 }

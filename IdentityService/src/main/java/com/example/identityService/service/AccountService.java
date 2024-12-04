@@ -2,6 +2,7 @@ package com.example.identityService.service;
 
 import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreateAccountRequest;
+import com.example.identityService.DTO.request.UserPageRequest;
 import com.example.identityService.DTO.response.PageResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.JsonMapper;
@@ -13,7 +14,6 @@ import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.service.auth.KeycloakService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +30,6 @@ public class AccountService {
     private final KeycloakService keycloakService;
     private final JsonMapper jsonMapper;
 
-    @PreAuthorize("hasPermission('ACCOUNTS', 'READ')")
     public UserResponse getUserinfo(String accountId){
         Account foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
@@ -40,7 +39,6 @@ public class AccountService {
         return response;
     }
 
-    @PreAuthorize("hasPermission('ACCOUNTS', 'CREATE')")
     public boolean createUser(CreateAccountRequest request){
         accountRepository
                 .findByEmail(request.getEmail())
@@ -57,7 +55,6 @@ public class AccountService {
                 keycloakService.createKeycloakUser(accountMapper.toRegisterRequest(request));
     }
 
-    @PreAuthorize("hasPermission('ACCOUNTS', 'UPDATE')")
     public boolean setUserEnable(String accountId, boolean enable){
         Account foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
@@ -67,7 +64,6 @@ public class AccountService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ACCOUNTS', 'DELETE')")
     public boolean deleteUser(String accountId) {
         Account foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
@@ -77,23 +73,19 @@ public class AccountService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ACCOUNTS', 'READ')")
-    public PageResponse<UserResponse> getUsers(int page, int size, String query, String sortedBy, EnumSortDirection sortDirection) throws JsonProcessingException {
-        var res = accountRepository.getAccountData(page, size, query, sortedBy, sortDirection.name());
-        int totalRecords = (int) res.getFirst()[0];
-        String accountsJson = (String) res.getFirst()[1];
-        List<UserResponse> userResponseList = jsonMapper
-                .JSONToList(accountsJson == null? "[]" : accountsJson, UserResponse.class);
+    public PageResponse<UserResponse> getUsers(UserPageRequest request) {
+        long totalRecords = accountRepository.count(request);
+        List<UserResponse> userResponseList = accountRepository.search(request);
         return PageResponse.<UserResponse>builder()
-                .page(page)
-                .size(size)
-                .query(query)
-                .sortedBy(sortedBy)
-                .sortDirection(sortDirection.name())
-                .isFirst(page == 1)
-                .isLast(page % size == page)
+                .page(request.getPage())
+                .size(request.getSize())
+                .query(request.getQuery())
+                .sortedBy(request.getSortedBy())
+                .sortDirection(request.getSortDirection().name())
+                .first(request.getPage() == 1)
+                .last(request.getPage() % request.getSize() == request.getPage())
                 .totalRecords(totalRecords)
-                .totalPages(page % size)
+                .totalPages(request.getPage() % request.getSize())
                 .response(userResponseList)
                 .build();
     }

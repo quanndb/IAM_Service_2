@@ -1,6 +1,5 @@
 package com.example.identityService.service;
 
-import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.entity.AccountRole;
 import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
@@ -9,13 +8,9 @@ import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.repository.AccountRoleRepository;
 import com.example.identityService.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,62 +21,62 @@ public class AccountRoleService {
     private final AccountRepository accountRepository;
 
     public List<String> getAllUserRole(String accountId) {
-        return accountRoleRepository.findAllByAccountId(accountId).stream()
-                .map(item -> roleRepository.findById(item.getRoleId()))
-                .filter(Optional::isPresent)
-                .map(optionalRole -> optionalRole.get().getName())
-                .collect(Collectors.toList());
+        List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+                .stream()
+                .map(AccountRole::getRoleId)
+                .toList();
+        return roleRepository.findAllById(foundRoleIds).stream().map(Role::getName).toList();
     }
 
     public List<String> getAllUserRoleId(String accountId) {
-        return accountRoleRepository.findAllByAccountId(accountId).stream()
-                .map(item -> roleRepository.findById(item.getRoleId()))
-                .filter(Optional::isPresent)
-                .map(optionalRole -> optionalRole.get().getId())
-                .collect(Collectors.toList());
+        List<String> foundRoleIds = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+                .stream()
+                .map(AccountRole::getRoleId)
+                .toList();
+        return roleRepository.findAllById(foundRoleIds).stream().map(Role::getId).toList();
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
-    public boolean assignRolesForUser(String accountId, List<EnumRole> roles){
+    public boolean assignRolesForUser(String accountId, List<String> roles){
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
-        List<AccountRole> accountRoleList = roles.stream()
-                .map(item -> {
-                    String roleId = roleRepository.findByNameIgnoreCase(item.getName())
-                            .orElseThrow(() -> new AppExceptions(ErrorCode.ROLE_NOTFOUND))
-                            .getId();
-                    if (!accountRoleRepository.existsByAccountIdAndRoleId(accountId, roleId)) {
-                        return AccountRole.builder()
-                                .roleId(roleId)
-                                .accountId(accountId)
-                                .build();
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+        List<String> accountRoleIdList = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId)
+                .stream()
+                .map(AccountRole::getRoleId)
                 .toList();
 
-        accountRoleRepository.saveAll(accountRoleList);
+        List<String> accountRoleNames = roleRepository.findAllById(accountRoleIdList)
+                .stream()
+                .map(Role::getName)
+                .toList();
 
+        List<AccountRole> saveAccountRoles = roleRepository.findAllByNameIn(roles.stream()
+                        .filter(name -> !accountRoleNames.contains(name))
+                        .toList())
+                .stream()
+                .map(item->AccountRole.builder()
+                        .roleId(item.getId())
+                        .accountId(accountId)
+                        .build())
+                .toList();
+
+        accountRoleRepository.saveAll(saveAccountRoles);
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
-    public boolean unassignRolesForUser(String accountId, List<EnumRole> roles){
+    public boolean unassignRolesForUser(String accountId, List<String> roles){
         accountRepository.findById(accountId).orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
 
-        List<AccountRole> userRoles = accountRoleRepository.findAllByAccountId(accountId);
+        List<AccountRole> userRoles = accountRoleRepository.findAllByAccountIdAndDeletedIsFalse(accountId);
         List<String> deleteRoleList = roleRepository.findAllByNameIn(roles.stream()
-                        .map(EnumRole::getName)
                         .toList()).stream()
                 .map(Role::getId)
                 .toList();
 
         List<AccountRole> deleteAccountRoleList = userRoles.stream()
                 .filter(item -> deleteRoleList.contains(item.getRoleId()))
+                .peek(item -> item.setDeleted(true))
                 .toList();
 
-        accountRoleRepository.deleteAll(deleteAccountRoleList);
-
+        accountRoleRepository.saveAll(deleteAccountRoleList);
         return true;
     }
 }

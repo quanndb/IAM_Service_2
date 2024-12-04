@@ -12,6 +12,7 @@ import java.util.Optional;
 @Repository
 public interface PermissionRepository extends JpaRepository<Permission, String> {
     Optional<Permission> findByCodeIgnoreCase(String name);
+    List<Permission> findAllByCodeIgnoreCaseIn(List<String> codes);
 
     @Query(value = "SELECT * FROM get_permission_data(:page, :size, :query, :sortedBy, :sortDirection)", nativeQuery = true)
     List<Object[]> getPermissionData(

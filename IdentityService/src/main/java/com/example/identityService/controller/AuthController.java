@@ -1,7 +1,6 @@
 package com.example.identityService.controller;
 
 import com.example.identityService.DTO.ApiResponse;
-import com.example.identityService.DTO.request.AppLogoutRequest;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.ForgotPasswordRequest;
 import com.example.identityService.DTO.request.LoginRequest;
@@ -54,7 +53,7 @@ public class AuthController {
     public ApiResponse<Boolean> logout(HttpServletRequest requestHeader, @RequestBody @Valid LogoutRequest requestBody){
         String accessToken = requestHeader.getHeader("Authorization").substring(7);
         String refreshToken = requestBody.getRefreshToken();
-        boolean result = authServiceFactory.getAuthService().logout(new AppLogoutRequest(accessToken, refreshToken));
+        boolean result = authServiceFactory.getAuthService().logout(accessToken, refreshToken);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

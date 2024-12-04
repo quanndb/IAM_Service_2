@@ -44,7 +44,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         return checkUserPermission(authentication.getName(), targetId, permission);
     }
 
-    private boolean checkUserPermission(String email, Object resourceId, Object permissionScope) {
+    private boolean checkUserPermission(String email, Object resourceCode, Object permissionScope) {
         PermissionScope foundScope = PermissionScope.valueOf(permissionScope.toString().toUpperCase());
 
         Account foundUser = accountRepository.findByEmail(email)
@@ -56,16 +56,11 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND)).getId();
         if(roleIds.contains(roleSuperAdminId)) return true;
 
-        for(String item : roleIds){
-            boolean isExistedRole =  rolePermissionRepository
-                    .existsByRoleIdAndPermissionCodeIgnoreCaseAndScope(
-                            item,
-                            resourceId.toString(),
-                            foundScope
+        return rolePermissionRepository
+                    .isValidPermissionScope(
+                            roleIds,
+                            resourceCode.toString(),
+                            foundScope.name()
                     );
-
-            if(isExistedRole) return true;
-        }
-        return false;
     }
 }

@@ -5,14 +5,12 @@ import com.example.identityService.DTO.request.CreatePermissionRequest;
 import com.example.identityService.DTO.response.PageResponse;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Permission;
-import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.PermissionMapper;
 import com.example.identityService.repository.PermissionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,7 +23,6 @@ public class PermissionService {
     private final PermissionMapper permissionMapper;
     private final JsonMapper jsonMapper;
 
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
     public boolean createPermission(CreatePermissionRequest request){
         permissionRepository.findByCodeIgnoreCase(request.getCode())
                         .ifPresent(_ -> {
@@ -38,7 +35,6 @@ public class PermissionService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'UPDATE')")
     public boolean updatePermission(String roleId, CreatePermissionRequest request){
         Permission foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.PERMISSION_NOTFOUND));
@@ -47,7 +43,6 @@ public class PermissionService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
     public boolean deletePermission(String roleId){
         Permission foundPermission = permissionRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
@@ -56,7 +51,6 @@ public class PermissionService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
     public PageResponse<Permission> getPermissions(int page, int size, String query, String sortedBy, EnumSortDirection sortDirection) throws JsonProcessingException {
         var res = permissionRepository.getPermissionData(page, size, query, sortedBy, sortDirection.name());
         int totalRecords = (int) res.getFirst()[0];
@@ -69,8 +63,8 @@ public class PermissionService {
                 .query(query)
                 .sortedBy(sortedBy)
                 .sortDirection(sortDirection.name())
-                .isFirst(page == 1)
-                .isLast(page % size == page)
+                .first(page == 1)
+                .last(page % size == page)
                 .totalRecords(totalRecords)
                 .totalPages(page % size)
                 .response(permissionList)

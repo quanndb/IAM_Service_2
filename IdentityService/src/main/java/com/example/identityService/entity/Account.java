@@ -31,11 +31,11 @@ public class Account extends Auditable{
     @Column(nullable = false)
     private String fullname;
     @Column(nullable = false)
-    private boolean isVerified;
+    private boolean verified;
     @Column(nullable = false)
-    private boolean isEnable;
+    private boolean enable;
     @Column(nullable = false)
-    private boolean isDeleted;
+    private boolean deleted;
     private Gender gender;
     private String address;
     private String cloudImageId;

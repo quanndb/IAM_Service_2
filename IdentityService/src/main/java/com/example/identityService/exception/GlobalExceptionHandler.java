@@ -2,7 +2,6 @@ package com.example.identityService.exception;
 
 import com.example.identityService.DTO.ApiResponse;
 import com.fasterxml.jackson.core.JsonParseException;
-import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

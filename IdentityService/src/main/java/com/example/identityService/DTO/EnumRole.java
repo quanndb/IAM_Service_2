@@ -21,12 +21,12 @@ public enum EnumRole {
     }
 
     @JsonCreator
-    public static EnumRole fromName(String scope) {
+    public static EnumRole fromName(String name) {
         for (EnumRole enumRole : EnumRole.values()) {
-            if (enumRole.name.equalsIgnoreCase(scope)) {
+            if (enumRole.name.equalsIgnoreCase(name)) {
                 return enumRole;
             }
         }
-        throw new IllegalArgumentException("Unknown value: " + scope);
+        throw new IllegalArgumentException("Unknown value: " + name);
     }
 }
