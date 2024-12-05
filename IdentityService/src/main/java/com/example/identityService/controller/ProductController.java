@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
     @GetMapping
-    @PreAuthorize("hasPermission('products', 'Read')")
+    @PreAuthorize("hasPermission('PRODUCTS', 'READ')")
     public ApiResponse<String> getProducts(){
         return ApiResponse.<String>builder()
                 .code(200)
@@ -21,7 +21,7 @@ public class ProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasPermission('products', 'Create')")
+    @PreAuthorize("hasPermission('PRODUCTS', 'CREATE')")
     public ApiResponse<String> create(){
         return ApiResponse.<String>builder()
                 .code(200)

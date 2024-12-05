@@ -24,7 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     String[] PUBLIC_ENDPOINTS = {
-            "/auth/**",
+            "auth/**",
             "swagger-ui/**",
             "api-docs/**",
             "v3/api-docs/**",
@@ -44,10 +44,9 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated());
 
-        if(idpProvider.equals(IdpProvider.KEYCLOAK)){
-            configureKeycloak(http);
-        } else {
-            configureCustomJwt(http);
+        switch (idpProvider){
+            case IdpProvider.KEYCLOAK -> configureKeycloak(http);
+            default -> configureCustomJwt(http);
         }
 
         http.addFilterAfter(userFilter, BearerTokenAuthenticationFilter.class);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google OAuth 2.0 Login</title>
+  </head>
+  <body>
+    <h1>Google Login</h1>
+    <button id="google-login-btn">Login with Google</button>
+
+    <script>
+      const clientId =
+        "206673268344-lscn661d0us5buhj0umjtfh5udb046vi.apps.googleusercontent.com";
+      const redirectUri = "http://localhost:2818/api/v1.0.0/auth/google";
+      const scope = "openid email profile";
+      const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
+
+      document
+        .getElementById("google-login-btn")
+        .addEventListener("click", () => {
+          const authUrl = `${authEndpoint}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+            redirectUri
+          )}&scope=${encodeURIComponent(
+            scope
+          )}&access_type=offline&prompt=consent`;
+          window.location.href = authUrl;
+        });
+    </script>
+  </body>
+</html>

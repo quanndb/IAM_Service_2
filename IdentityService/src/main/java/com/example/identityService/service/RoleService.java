@@ -2,7 +2,9 @@ package com.example.identityService.service;
 
 import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreateRoleRequest;
+import com.example.identityService.DTO.request.RolePageRequest;
 import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.DTO.response.RoleResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Role;
@@ -13,7 +15,6 @@ import com.example.identityService.repository.RolePermissionRepository;
 import com.example.identityService.repository.RoleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,15 +27,13 @@ public class RoleService {
     private final RolePermissionRepository rolePermissionRepository;
     private final JsonMapper jsonMapper;
 
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
     public List<String> getAllRolePermission(String roleId){
-        return rolePermissionRepository.findAllByRoleId(roleId)
+        return rolePermissionRepository.findAllByRoleIdAndDeletedIsFalse(roleId)
                 .stream()
                 .map(item -> item.getScope() + " " + item.getPermissionCode())
                 .toList();
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'CREATE')")
     public boolean createRole(CreateRoleRequest request){
         roleRepository.findByNameIgnoreCase(request.getName())
                         .ifPresent( _ -> {
@@ -47,7 +46,6 @@ public class RoleService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'UPDATE')")
     public boolean updateRole(String roleId, CreateRoleRequest request){
         Role foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
@@ -56,7 +54,6 @@ public class RoleService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'DELETE')")
     public boolean deleteRole(String roleId){
         Role foundRole = roleRepository.findById(roleId)
                 .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
@@ -65,24 +62,20 @@ public class RoleService {
         return true;
     }
 
-    @PreAuthorize("hasPermission('ROLES', 'READ')")
-    public PageResponse<Role> getRoles(int page, int size, String query, String sortedBy, EnumSortDirection sortDirection) throws JsonProcessingException {
-            var res = roleRepository.getRoleData(page, size, query, sortedBy, sortDirection.name());
-            int totalRecords = (int) res.getFirst()[0];
-            String roleJson = (String) res.getFirst()[1];
-            List<Role> roleList = jsonMapper
-                    .JSONToList(roleJson == null? "[]" : roleJson, Role.class);
-            return PageResponse.<Role>builder()
-                    .page(page)
-                    .size(size)
-                    .query(query)
-                    .sortedBy(sortedBy)
-                    .sortDirection(sortDirection.name())
-                    .isFirst(page == 1)
-                    .isLast(page % size == page)
-                    .totalRecords(totalRecords)
-                    .totalPages(page % size)
-                    .response(roleList)
-                    .build();
+    public PageResponse<RoleResponse> getRoles(RolePageRequest request) {
+        long totalRecords = roleRepository.count(request);
+        List<RoleResponse> roleResponses = roleRepository.search(request);
+        return PageResponse.<RoleResponse>builder()
+                .page(request.getPage())
+                .size(request.getSize())
+                .query(request.getQuery())
+                .sortedBy(request.getSortedBy())
+                .sortDirection(request.getSortDirection().name())
+                .first(request.getPage() == 1)
+                .last(request.getPage() % request.getSize() == request.getPage())
+                .totalRecords(totalRecords)
+                .totalPages(request.getPage() % request.getSize())
+                .response(roleResponses)
+                .build();
     }
 }

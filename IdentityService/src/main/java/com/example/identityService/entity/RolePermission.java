@@ -33,4 +33,6 @@ public class RolePermission extends Auditable{
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PermissionScope scope;
+    @Column(nullable = false)
+    private boolean deleted;
 }
