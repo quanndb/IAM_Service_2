@@ -3,15 +3,12 @@ package com.example.identityService.service;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.AuthenticationProperties;
 import com.example.identityService.entity.Account;
-import com.example.identityService.entity.Role;
 import com.example.identityService.DTO.Token;
-import com.example.identityService.exception.AppExceptions;
-import com.example.identityService.exception.ErrorCode;
-import com.example.identityService.repository.RoleRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +44,7 @@ public class TokenService implements InitializingBean {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    private final RoleRepository roleRepository;
+    private final AccountRoleService accountRoleService;
 
     @Override
     public void afterPropertiesSet() {
@@ -61,7 +58,6 @@ public class TokenService implements InitializingBean {
         return keyStoreKeyFactory.getKeyPair(alias);
     }
 
-
     // token generators
     public String generateRefreshToken(String email, String ip){
         return otherTokenFactory(email, REFRESH_TOKEN_LIFE_TIME, ip);
@@ -72,20 +68,18 @@ public class TokenService implements InitializingBean {
     }
 
     public String accessTokenFactory(Account account) {
-        // get the permissions
-        Role role = roleRepository.findById(account.getRoleId())
-                .orElseThrow(()->new AppExceptions(ErrorCode.ROLE_NOTFOUND));
 
         String tokenId = UUID.randomUUID().toString();
 
         // build token
         return Jwts.builder()
                 .subject(account.getEmail())
+                .claim("email",account.getEmail())
                 .issuer("DevDeli")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)))
                 .id(tokenId)
-                .claim("scope", role.getName())
+                .claim("scope", accountRoleService.getAllUserRole(account.getId()))
                 .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
                 .compact();
     }
@@ -95,6 +89,7 @@ public class TokenService implements InitializingBean {
         // build token
         return Jwts.builder()
                 .subject(email)
+                .claim("email",email)
                 .issuer("DevDeli")
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + TimeConverter.convertToMilliseconds(liveTime)))
@@ -121,17 +116,20 @@ public class TokenService implements InitializingBean {
             return Jwts.parser().verifyWith(keyPair.getPublic())
                     .build().parseSignedClaims(token).getPayload();
         }
-        catch (ExpiredJwtException exception){
-            throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        catch (ExpiredJwtException | SignatureException exception){
+            return null;
         }
     }
 
     public boolean isTokenExpired(String token){
-        return extractClaims(token).getExpiration().before(new Date());
+        Claims claims = extractClaims(token);
+        return claims != null && claims.getExpiration().before(new Date());
     }
 
     public boolean isLogout(String token){
-        String tokenId = extractClaims(token).getId();
+        Claims claims = extractClaims(token);
+        String tokenId = claims == null ? null : claims.getId();
+        if(tokenId == null) return false;
         String valueOfLogoutToken = redisTemplate.opsForValue().get("token_id:"+tokenId);
         return valueOfLogoutToken != null;
     }
@@ -149,4 +147,5 @@ public class TokenService implements InitializingBean {
             return false;
         }
     }
+
 }

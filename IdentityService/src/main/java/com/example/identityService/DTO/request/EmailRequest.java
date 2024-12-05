@@ -13,5 +13,6 @@ public class EmailRequest {
     private String subject;
     @NotBlank(message = "FIELD_NOT_BLANK")
     private String content;
+    @NotBlank(message = "FIELD_NOT_BLANK")
     private List<String> recipients;
 }

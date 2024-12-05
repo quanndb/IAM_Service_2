@@ -1,7 +1,12 @@
 package com.example.identityService.entity;
 
 import com.example.identityService.DTO.Gender;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @Table(name = "account")
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class Account {
+public class Account extends Auditable{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -26,9 +31,11 @@ public class Account {
     @Column(nullable = false)
     private String fullname;
     @Column(nullable = false)
-    private boolean isVerified;
+    private boolean verified;
     @Column(nullable = false)
-    private String roleId;
+    private boolean enable;
+    @Column(nullable = false)
+    private boolean deleted;
     private Gender gender;
     private String address;
     private String cloudImageId;

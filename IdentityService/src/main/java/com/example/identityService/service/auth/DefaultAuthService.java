@@ -1,8 +1,10 @@
-package com.example.identityService.service;
+package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.EmailEnum;
-import com.example.identityService.DTO.request.EmailRequest;
+import com.example.identityService.DTO.EnumRole;
 import com.example.identityService.DTO.request.ChangePasswordRequest;
+import com.example.identityService.DTO.request.CreateAccountRequest;
+import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
@@ -13,14 +15,16 @@ import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.entity.Account;
 import com.example.identityService.entity.Logs;
 import com.example.identityService.DTO.Token;
-import com.example.identityService.entity.Role;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import com.example.identityService.mapper.AccountMapper;
 import com.example.identityService.mapper.CloudImageMapper;
 import com.example.identityService.repository.AccountRepository;
 import com.example.identityService.repository.LoggerRepository;
-import com.example.identityService.repository.RoleRepository;
+import com.example.identityService.service.AccountRoleService;
+import com.example.identityService.service.CloudinaryService;
+import com.example.identityService.service.EmailService;
+import com.example.identityService.service.TokenService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
@@ -33,25 +37,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class DefaultAuthService extends AbstractAuthService {
 
     @NonFinal
     @Value(value = "${app.baseUrl}")
     private String APP_BASEURL;
 
-    @NonFinal
-    @Value(value = "${security.authentication.max-login-attempt}")
-    private Integer MAX_LOGIN_ATTEMPT;
-    @NonFinal
-    @Value(value = "${security.authentication.login-delay-fail}")
-    private String LOGIN_DELAY_FAIL;
     @NonFinal
     @Value(value = "${security.authentication.max-forgot-password-attempt}")
     private Integer MAX_FORGOT_PASSWORD_ATTEMPT;
@@ -65,64 +62,39 @@ public class AuthService {
     @NonFinal
     @Value(value = "${security.authentication.jwt.refresh-token-life-time}")
     private String REFRESH_TOKEN_LIFE_TIME;
-    @NonFinal
     @Value(value = "${security.authentication.jwt.email-token-life-time}")
     private String EMAIL_TOKEN_LIFE_TIME;
 
     private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
     private final CloudinaryService cloudinaryService;
     private final CloudImageMapper cloudImageMapper;
     private final EmailService emailService;
     private final LoggerRepository loggerRepository;
-    private final RoleRepository roleRepository;
+
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    private final PasswordEncoder passwordEncoder;
+
     private final AccountMapper accountMapper;
 
+    private final AccountRoleService accountRoleService;
+
     // -----------------------------Login logout start-------------------------------
-    public LoginResponse login(LoginRequest request, String ip){
-        Account account = getAccountByEmail(request.getEmail());
-        if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
-        boolean success = passwordEncoder.matches(request.getPassword(), account.getPassword());
-        if(!success){
-            String key = String.join("","login-attempt:", account.getEmail());
-            String attemptTimeString = redisTemplate.opsForValue()
-                    .get(key);
-
-            if(attemptTimeString != null && Integer.parseInt(attemptTimeString) == MAX_LOGIN_ATTEMPT)
-                throw new AppExceptions(ErrorCode.TOO_MUCH_LOGIN_FAIL);
-            int value = attemptTimeString != null ? Integer.parseInt(attemptTimeString) + 1 : 1;
-            redisTemplate.opsForValue().set(key, Integer.toString(value),
-                    Duration.ofMillis(TimeConverter.convertToMilliseconds(LOGIN_DELAY_FAIL)));
-            throw new AppExceptions(ErrorCode.INVALID_EMAIL_PASSWORD);
-        }
-
-        return loginProcess(account, ip);
+    @Override
+    public LoginResponse performLogin(LoginRequest request){
+       return loginProcess(request.getEmail(), request.getIp());
     }
 
-    public LoginResponse loginProcess(Account account, String ip){
-        boolean isNewIp = !loggerRepository.existsByEmailAndIp(account.getEmail(),ip);
-        if(isNewIp){
-            sendConfirmValidIp(account.getEmail(), ip);
-        }
-
-        String accessToken = tokenService.accessTokenFactory(account);
-        String refreshToken = tokenService.generateRefreshToken(account.getEmail(), ip);
-        loggerRepository.save(Logs.builder()
-                .actionName("LOGIN")
-                .ip(ip)
-                .build());
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+    @Override
+    public LoginResponse performLoginWithGoogle(String email, String password, String ip){
+        return loginProcess(email, ip);
     }
 
-    public Boolean logout(String accessToken, String refreshToken) {
+    @Override
+    public boolean logout(String accessToken, String refreshToken) {
         boolean isDisabledAccessToken = tokenService.deActiveToken(new Token(accessToken,
                 TimeConverter.convertToMilliseconds(ACCESS_TOKEN_LIFE_TIME)));
         boolean isDisabledRefreshToken = tokenService.deActiveToken(new Token(refreshToken,
@@ -130,56 +102,68 @@ public class AuthService {
         return  isDisabledAccessToken && isDisabledRefreshToken;
     }
 
-    public void sendConfirmValidIp(String email, String ip){
-        String verifyToken = tokenService.generateTempEmailToken(email,ip);
-        String verifyUrl = String.join("",APP_BASEURL,"auth/verification?token=",verifyToken);
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.CONFIRM_IP.getSubject(),
-                        String.join(" ",EmailEnum.CONFIRM_IP.getContent(), verifyUrl)
-                        ,List.of(email)));
+    public LoginResponse loginProcess(String email, String ip){
+        Account foundAccount = accountRepository.findByEmail(email)
+                .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
+        String accessToken = tokenService.accessTokenFactory(foundAccount);
+        String refreshToken = tokenService.generateRefreshToken(email, ip);
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
+
     // -----------------------------Login logout end-------------------------------
 
     // -----------------------------Registration flow start-------------------------------
-    public boolean register(RegisterRequest request, String ip){
+
+    @Override
+    public boolean performRegister(RegisterRequest request) {
         accountRepository
                 .findByEmail(request.getEmail())
                 .ifPresent(_ -> {
                     throw new AppExceptions(ErrorCode.USER_EXISTED);
                 });
         Account newAccount = accountMapper.toAccount(request);
-        Role userRole = roleRepository.findByNameIgnoreCase("USER")
-                .orElseThrow(()-> new AppExceptions(ErrorCode.ROLE_NOTFOUND));
-        newAccount.setRoleId(userRole.getId());
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
+        newAccount.setEnable(true);
 
-        accountRepository.save(newAccount);
-        loggerRepository.save(Logs.builder()
-                        .actionName("REGISTRATION")
-                        .ip(ip)
-                .build());
+        createAppUserAndAssignRole(newAccount, request.getIp());
 
-        sendVerifyEmail(newAccount.getEmail(), ip);
+        sendVerifyEmail(newAccount.getEmail(), request.getIp());
         return true;
     }
 
-    public void sendVerifyEmail(String email, String ip){
-        String verifyToken = tokenService.generateTempEmailToken(email, ip);
-        String verifyUrl = String.join("",APP_BASEURL,"auth/verification?token=",verifyToken);
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.VERIFY_EMAIL.getSubject(),
-                                String.join(" ",EmailEnum.VERIFY_EMAIL.getContent(), verifyUrl)
-                                ,List.of(email)));
+    @Override
+    public boolean performCreateUser(CreateAccountRequest request) {
+        accountRepository
+                .findByEmail(request.getEmail())
+                .ifPresent(_ -> {
+                    throw new AppExceptions(ErrorCode.USER_EXISTED);
+                });
+        Account newAccount = accountMapper.toAccount(request);
+        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Account savedAccount = accountRepository.save(newAccount);
+        return accountRoleService
+                .assignRolesForUser(savedAccount.getId(), request.getRoles());
+    }
+
+    @Override
+    public boolean performRegisterUserFromGoogle(Account request, String ip) {
+        createAppUserAndAssignRole(request, ip);
+        return true;
     }
 
     public Object verifyEmailAndIP(String token, String ip){
         Claims claims = tokenService.extractClaims(token);
+        if(claims == null) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         String email = claims.getSubject();
         String ipFromToken = claims.get("IP").toString();
         if(!tokenService.verifyToken(token) || !ip.equals(ipFromToken))
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
 
-        boolean foundLog =loggerRepository
+        boolean foundLog = loggerRepository
                 .existsByEmailAndIp(email, ipFromToken);
 
         Account account = getAccountByEmail(email);
@@ -191,24 +175,19 @@ public class AuthService {
 
         loggerRepository.save(Logs.builder()
                 .actionName("CONFIRM_IP")
+                .email(email)
                 .ip(ip)
                 .build());
 
-        return loginProcess(account, ip);
+        return loginProcess(account.getEmail(), ip);
     }
     // -----------------------------Registration flow end-------------------------------
 
     // -----------------------------User information start-------------------------------
     // profile
-    public UserResponse getProfile() {
+    public UserResponse getProfile(String token) {
         Account foundUser = getCurrentUser();
-        return UserResponse.builder()
-                .email(foundUser.getEmail())
-                .address(foundUser.getAddress())
-                .fullname(foundUser.getFullname())
-                .gender(foundUser.getGender())
-                .cloudImageUrl(foundUser.getCloudImageUrl())
-                .build();
+        return accountMapper.toUserResponse(foundUser);
     }
 
     public boolean updateProfile(UpdateProfileRequest request, MultipartFile image) throws IOException {
@@ -231,12 +210,16 @@ public class AuthService {
     }
 
     // password
-    public boolean changePassword(ChangePasswordRequest request, String ip) {
+    @Override
+    public boolean performChangePassword(ChangePasswordRequest request, String ip) {
         String currentPassword = request.getCurrentPassword();
         String newPassword = request.getNewPassword();
         if(currentPassword.equals(newPassword)) throw new AppExceptions(ErrorCode.PASSWORD_MUST_DIFFERENCE);
 
-        Account foundUser = getCurrentUser();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Account foundUser = accountRepository.findByEmail(email)
+                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         boolean isCorrectPassword = passwordEncoder.matches(request.getCurrentPassword(), foundUser.getPassword());
         if(!isCorrectPassword) throw new AppExceptions(ErrorCode.WRONG_PASSWORD);
 
@@ -245,6 +228,7 @@ public class AuthService {
 
         loggerRepository.save(Logs.builder()
                 .actionName("CHANGE_PASSWORD")
+                .email(foundUser.getEmail())
                 .ip(ip)
                 .build());
         return true;
@@ -256,7 +240,8 @@ public class AuthService {
         return true;
     }
 
-    public boolean resetPassword(String token, String newPassword, String ip) {
+    @Override
+    public boolean performResetPassword(String token, String newPassword, String ip) {
         String email = tokenService.getTokenDecoded(token).getSubject();
 
         String key = String.join("","forgot-password-attempt:", email);
@@ -266,16 +251,18 @@ public class AuthService {
         if(!tokenService.verifyToken(token) || email == null || !Objects.equals(activeToken, token))
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
 
-        Account foundAccount = getAccountByEmail(email);
+        tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
+
+        Account foundAccount = accountRepository.findByEmail(email)
+                .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         foundAccount.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(foundAccount);
 
         loggerRepository.save(Logs.builder()
                 .actionName("RESET_PASSWORD")
+                .email(email)
                 .ip(ip)
                 .build());
-
-        tokenService.deActiveToken(new Token(token, TimeConverter.convertToMilliseconds(EMAIL_TOKEN_LIFE_TIME)));
 
         sendResetPasswordSuccess(email);
         return true;
@@ -304,12 +291,6 @@ public class AuthService {
                         ,List.of(email)));
     }
 
-    public void sendResetPasswordSuccess(String email){
-        emailService
-                .sendEmail(new EmailRequest(EmailEnum.RESET_PASSWORD_SUCCESS.getSubject(),
-                        String.join(" ",EmailEnum.RESET_PASSWORD_SUCCESS.getContent(), LocalDateTime.now().toString())
-                        ,List.of(email)));
-    }
     // -----------------------------User information end-------------------------------
 
     // -----------------------------Utilities start-------------------------------
@@ -320,11 +301,12 @@ public class AuthService {
 
     public Account getCurrentUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(email.equals("anonymous")) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
+        if(email.equals("anonymousUser")) throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
         return getAccountByEmail(email);
     }
 
-    public String getNewAccessToken(String refreshToken){
+    @Override
+    public String getNewToken(String refreshToken){
         if(!tokenService.verifyToken(refreshToken) ||
                 Objects.isNull(tokenService.getTokenDecoded(refreshToken).getSubject())){
             throw new AppExceptions(ErrorCode.UNAUTHENTICATED);
@@ -333,6 +315,17 @@ public class AuthService {
         String email = tokenService.getTokenDecoded(refreshToken).getSubject();
         Account foundAccount = getAccountByEmail(email);
         return tokenService.accessTokenFactory(foundAccount);
+    }
+
+
+    public void createAppUserAndAssignRole(Account account, String ip){
+        Account savedAccount = accountRepository.save(account);
+        loggerRepository.save(Logs.builder()
+                .actionName("REGISTRATION")
+                .email(savedAccount.getEmail())
+                .ip(ip)
+                .build());
+        accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
     }
     // -----------------------------Utilities end-------------------------------
 }

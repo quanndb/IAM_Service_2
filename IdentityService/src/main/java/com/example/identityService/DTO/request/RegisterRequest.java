@@ -5,11 +5,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RegisterRequest {
     @Email(message = "INVALID_EMAIL")
@@ -22,4 +24,5 @@ public class RegisterRequest {
     private String fullname;
     private Gender gender;
     private String address;
+    private String ip;
 }

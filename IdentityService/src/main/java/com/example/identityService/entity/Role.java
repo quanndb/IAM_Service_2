@@ -1,25 +1,31 @@
 package com.example.identityService.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.FieldDefaults;
 
 @Entity
 @Getter
 @Setter
 @Builder
+@Table(name = "role")
 @AllArgsConstructor
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class Role {
+public class Role extends Auditable{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String name;
+    private String description;
+    @Column(nullable = false)
+    private boolean deleted;
 }
