@@ -1,11 +1,14 @@
 package com.example.identityService.service.auth;
 
 import com.example.identityService.DTO.request.LoginRequest;
+import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.config.KeycloakProvider;
+import com.example.identityService.entity.Account;
 import com.example.identityService.exception.AppExceptions;
 import com.example.identityService.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,10 +31,16 @@ public class KeycloakService extends AbstractAuthService{
     private final KeycloakProvider keycloakProvider;
 
     @Override
-    public Object performLogin(LoginRequest request) {
+    public LoginResponse performLogin(LoginRequest request) {
         keycloakProvider.setKeycloak(request.getEmail(), request.getPassword());
-        return keycloakProvider.getKeycloak()
+        AccessTokenResponse response = keycloakProvider.getKeycloak()
                 .tokenManager().getAccessToken();
+        return new LoginResponse(response.getToken(), response.getRefreshToken());
+    }
+
+    @Override
+    public LoginResponse performLoginWithGoogle(String email, String password, String ip) {
+        return performLogin(new LoginRequest(email, password, ip));
     }
 
     @Override

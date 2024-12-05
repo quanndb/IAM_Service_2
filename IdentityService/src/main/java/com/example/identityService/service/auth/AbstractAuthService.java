@@ -7,6 +7,9 @@ import com.example.identityService.DTO.request.ChangePasswordRequest;
 import com.example.identityService.DTO.request.EmailRequest;
 import com.example.identityService.DTO.request.LoginRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
+import com.example.identityService.DTO.response.GoogleUserResponse;
+import com.example.identityService.DTO.response.LoginResponse;
+import com.example.identityService.Util.RandomCodeCreator;
 import com.example.identityService.Util.TimeConverter;
 import com.example.identityService.config.KeycloakProvider;
 import com.example.identityService.entity.Account;
@@ -32,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public abstract class AbstractAuthService{
 
@@ -57,18 +61,57 @@ public abstract class AbstractAuthService{
     @Autowired
     private AccountRoleService accountRoleService;
     @Autowired
+    private GoogleAuthService googleAuthService;
+    @Autowired
     private EmailService emailService;
     @Autowired
     private TokenService tokenService;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    public abstract Object performLogin(LoginRequest request);
+    public abstract LoginResponse performLogin(LoginRequest request);
+    public abstract LoginResponse performLoginWithGoogle(String email, String password, String ip);
     public abstract boolean logout(String accessToken, String refreshToken);
-    public abstract boolean performResetPassword(String email, String newPassword);
     public abstract Object getNewToken(String refreshToken);
+    public abstract boolean performResetPassword(String email, String newPassword);
     public abstract boolean performChangePassword(String email, String oldPassword, String newPassword);
 
+    // google
+    public LoginResponse loginWithGoogle(String code, String ip) {
+        var token = googleAuthService.exchangeToken(code);
+        var userResponse = googleAuthService.getUserInfo(token.getAccessToken());
+
+        return accountRepository.findByEmail(userResponse.getEmail())
+                .map(account -> performLoginWithGoogle(account.getEmail(), account.getPassword(), ip))
+                .orElseGet(() -> {
+                    Account newAccount = createAccountPattern(userResponse);
+
+                    createKeycloakUser(RegisterRequest.builder()
+                            .email(newAccount.getEmail())
+                            .password(newAccount.getPassword())
+                            .fullname(newAccount.getFullname())
+                            .ip(ip)
+                            .build());
+
+                    createAppUserAndAssignRole(newAccount, ip);
+
+                    return performLoginWithGoogle(newAccount.getEmail(), newAccount.getPassword(), ip);
+                });
+    }
+
+    private Account createAccountPattern(GoogleUserResponse userResponse) {
+        return Account.builder()
+                .email(userResponse.getEmail())
+                .password(passwordEncoder.encode(RandomCodeCreator.generateCode() + ""))
+                .fullname(userResponse.getName())
+                .cloudImageUrl(userResponse.getPicture())
+                .verified(userResponse.isEmailVerified())
+                .enable(true)
+                .deleted(false)
+                .build();
+    }
+
+    // password
     public boolean changePassword(ChangePasswordRequest request, String ip){
         String currentPassword = request.getCurrentPassword();
         String newPassword = request.getNewPassword();
@@ -119,7 +162,8 @@ public abstract class AbstractAuthService{
         return performResetPassword(foundAccount.getEmail(), newPassword);
     }
 
-    public Object login(LoginRequest request){
+    // login
+    public LoginResponse login(LoginRequest request){
         Account foundAccount = accountRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
         boolean result = isValidUserStatus(foundAccount);
@@ -155,6 +199,7 @@ public abstract class AbstractAuthService{
         return null;
     }
 
+    // registration
     public boolean register(RegisterRequest request){
         return createAppUser(request) && createKeycloakUser(request);
     }
@@ -169,17 +214,20 @@ public abstract class AbstractAuthService{
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
         newAccount.setEnable(true);
 
+        createAppUserAndAssignRole(newAccount, request.getIp());
+
+        sendVerifyEmail(newAccount.getEmail(), request.getIp());
+        return true;
+    }
+
+    public void createAppUserAndAssignRole(Account newAccount, String ip){
         Account savedAccount = accountRepository.save(newAccount);
         loggerRepository.save(Logs.builder()
                 .actionName("REGISTRATION")
                 .email(newAccount.getEmail())
-                .ip(request.getIp())
+                .ip(ip)
                 .build());
-
         accountRoleService.assignRolesForUser(savedAccount.getId(), List.of(EnumRole.USER.getName()));
-
-        sendVerifyEmail(newAccount.getEmail(), request.getIp());
-        return true;
     }
 
     public boolean createKeycloakUser(RegisterRequest request){
@@ -202,6 +250,7 @@ public abstract class AbstractAuthService{
         return true;
     }
 
+    // utilities
     public static boolean isValidUserStatus(Account account){
         if(!account.isVerified()) throw new AppExceptions(ErrorCode.NOT_VERIFY_ACCOUNT);
         if(!account.isEnable()) throw new AppExceptions(ErrorCode.ACCOUNT_LOCKED);

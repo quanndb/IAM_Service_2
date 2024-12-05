@@ -59,7 +59,6 @@ public class DefaultAuthService extends AbstractAuthService {
     private String REFRESH_TOKEN_LIFE_TIME;
 
     private final AccountRepository accountRepository;
-    private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
     private final CloudinaryService cloudinaryService;
@@ -70,12 +69,21 @@ public class DefaultAuthService extends AbstractAuthService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    private final PasswordEncoder passwordEncoder;
+
     private final AccountMapper accountMapper;
+
+    private final GoogleAuthService googleAuthService;
 
     // -----------------------------Login logout start-------------------------------
     @Override
     public LoginResponse performLogin(LoginRequest request){
        return loginProcess(request.getEmail(), request.getIp());
+    }
+
+    @Override
+    public LoginResponse performLoginWithGoogle(String email, String password, String ip){
+        return loginProcess(email, ip);
     }
 
     @Override
@@ -221,5 +229,7 @@ public class DefaultAuthService extends AbstractAuthService {
         Account foundAccount = getAccountByEmail(email);
         return tokenService.accessTokenFactory(foundAccount);
     }
+
+
     // -----------------------------Utilities end-------------------------------
 }

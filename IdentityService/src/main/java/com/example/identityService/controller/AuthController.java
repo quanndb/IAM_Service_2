@@ -9,6 +9,7 @@ import com.example.identityService.DTO.request.RefreshTokenRequest;
 import com.example.identityService.DTO.request.RegisterRequest;
 import com.example.identityService.DTO.request.ResetPasswordRequest;
 import com.example.identityService.DTO.request.UpdateProfileRequest;
+import com.example.identityService.DTO.response.LoginResponse;
 import com.example.identityService.Util.IpChecker;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.Util.ObjectValidator;
@@ -40,10 +41,10 @@ public class AuthController {
     private final JsonMapper jsonMapper;
 
     @PostMapping("/login")
-    public ApiResponse<?> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request){
+    public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest dto, HttpServletRequest request){
         dto.setIp(IpChecker.getClientIpFromRequest(request));
         var res = authServiceFactory.getAuthService().login(dto);
-        return ApiResponse.builder()
+        return ApiResponse.<LoginResponse>builder()
                 .code(200)
                 .result(res)
                 .build();
@@ -144,6 +145,15 @@ public class AuthController {
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
+                .build();
+    }
+
+    @GetMapping("/google")
+    public ApiResponse<LoginResponse> loginWithGoogle(@RequestParam String code, HttpServletRequest request){
+        String ip = IpChecker.getClientIpFromRequest(request);
+        return ApiResponse.<LoginResponse>builder()
+                .code(200)
+                .result(authServiceFactory.getAuthService().loginWithGoogle(code, ip))
                 .build();
     }
 }
