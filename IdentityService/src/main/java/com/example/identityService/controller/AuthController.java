@@ -14,6 +14,7 @@ import com.example.identityService.Util.IpChecker;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.Util.ObjectValidator;
 import com.example.identityService.config.idp_config.AuthServiceFactory;
+import com.example.identityService.service.auth.AbstractAuthService;
 import com.example.identityService.service.auth.DefaultAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -67,7 +68,7 @@ public class AuthController {
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message("Please check your verification email")
-                .result(authServiceFactory.getAuthService().register(dto))
+                .result(AbstractAuthService.register(dto))
                 .build();
     }
 
@@ -110,9 +111,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ApiResponse<Boolean> resetPassword(@RequestBody @Valid ResetPasswordRequest passwordRequestDTO, HttpServletRequest request){
         String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = authServiceFactory.getAuthService()
-                .resetPassword(passwordRequestDTO.getToken(),
-                        passwordRequestDTO.getNewPassword(), ip);
+        boolean result = AbstractAuthService.resetPassword(passwordRequestDTO, ip);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))
@@ -140,8 +139,7 @@ public class AuthController {
     @PutMapping("/me/change-password")
     public ApiResponse<Boolean> changePassword(@RequestBody @Valid ChangePasswordRequest changePasswordDTO, HttpServletRequest request){
         String ip = IpChecker.getClientIpFromRequest(request);
-        boolean result = authServiceFactory.getAuthService()
-                .changePassword(changePasswordDTO, ip);
+        boolean result = AbstractAuthService.changePassword(changePasswordDTO, ip);
         return ApiResponse.<Boolean>builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

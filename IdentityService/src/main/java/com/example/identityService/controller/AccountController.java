@@ -9,6 +9,7 @@ import com.example.identityService.DTO.response.PageResponse;
 import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.service.AccountRoleService;
 import com.example.identityService.service.AccountService;
+import com.example.identityService.service.auth.AbstractAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -44,7 +45,7 @@ public class AccountController {
     @PostMapping
     @PreAuthorize("hasPermission('ACCOUNTS', 'CREATE')")
     public ApiResponse<?> createAccount(@RequestBody @Valid CreateAccountRequest request){
-        boolean result = accountService.createUser(request);
+        boolean result = AbstractAuthService.createUser(request);
         return ApiResponse.builder()
                 .code(200)
                 .message(ApiResponse.setResponseMessage(result))

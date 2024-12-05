@@ -39,22 +39,6 @@ public class AccountService {
         return response;
     }
 
-    public boolean createUser(CreateAccountRequest request){
-        accountRepository
-                .findByEmail(request.getEmail())
-                .ifPresent(_ -> {
-                    throw new AppExceptions(ErrorCode.USER_EXISTED);
-                });
-        Account newAccount = accountMapper.toAccount(request);
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-
-        Account savedAccount = accountRepository.save(newAccount);
-
-        return accountRoleService
-                .assignRolesForUser(savedAccount.getId(), request.getRoles()) &&
-                keycloakService.createKeycloakUser(accountMapper.toRegisterRequest(request));
-    }
-
     public boolean setUserEnable(String accountId, boolean enable){
         Account foundAccount = accountRepository.findById(accountId)
                 .orElseThrow(()->new AppExceptions(ErrorCode.NOTFOUND_EMAIL));
