@@ -4,7 +4,9 @@ import com.example.identityService.DTO.ApiResponse;
 import com.example.identityService.DTO.request.DetailsAssignPermissionRequest;
 import com.example.identityService.DTO.request.CreateRoleRequest;
 import com.example.identityService.DTO.request.PageRequest;
+import com.example.identityService.DTO.request.RolePageRequest;
 import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.DTO.response.RoleResponse;
 import com.example.identityService.entity.Role;
 import com.example.identityService.service.RolePermissionService;
 import com.example.identityService.service.RoleService;
@@ -32,11 +34,10 @@ public class RoleController {
 
     @GetMapping
     @PreAuthorize("hasPermission('ROLES', 'READ')")
-    public ApiResponse<PageResponse<Role>> getRoles(@ModelAttribute PageRequest request) throws JsonProcessingException {
-        return ApiResponse.<PageResponse<Role>>builder()
+    public ApiResponse<PageResponse<RoleResponse>> getRoles(@ModelAttribute RolePageRequest request) {
+        return ApiResponse.<PageResponse<RoleResponse>>builder()
                 .code(200)
-                .result(roleService.getRoles(request.getPage(), request.getSize(), request.getQuery(),
-                        request.getSortedBy(), request.getSortDirection()))
+                .result(roleService.getRoles(request))
                 .build();
     }
 

@@ -2,7 +2,10 @@ package com.example.identityService.service;
 
 import com.example.identityService.DTO.EnumSortDirection;
 import com.example.identityService.DTO.request.CreatePermissionRequest;
+import com.example.identityService.DTO.request.PermissionPageRequest;
 import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.DTO.response.PermissionResponse;
+import com.example.identityService.DTO.response.UserResponse;
 import com.example.identityService.Util.JsonMapper;
 import com.example.identityService.entity.Permission;
 import com.example.identityService.exception.AppExceptions;
@@ -14,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -51,23 +55,20 @@ public class PermissionService {
         return true;
     }
 
-    public PageResponse<Permission> getPermissions(int page, int size, String query, String sortedBy, EnumSortDirection sortDirection) throws JsonProcessingException {
-        var res = permissionRepository.getPermissionData(page, size, query, sortedBy, sortDirection.name());
-        int totalRecords = (int) res.getFirst()[0];
-        String permissionJson = (String) res.getFirst()[1];
-        List<Permission> permissionList = jsonMapper
-                .JSONToList(permissionJson == null? "[]" : permissionJson, Permission.class);
-        return PageResponse.<Permission>builder()
-                .page(page)
-                .size(size)
-                .query(query)
-                .sortedBy(sortedBy)
-                .sortDirection(sortDirection.name())
-                .first(page == 1)
-                .last(page % size == page)
+    public PageResponse<PermissionResponse> getPermissions(PermissionPageRequest request) {
+        long totalRecords = permissionRepository.count(request);
+        List<PermissionResponse> permissionResponses = permissionRepository.search(request);
+        return PageResponse.<PermissionResponse>builder()
+                .page(request.getPage())
+                .size(request.getSize())
+                .query(request.getQuery())
+                .sortedBy(request.getSortedBy())
+                .sortDirection(request.getSortDirection().name())
+                .first(request.getPage() == 1)
+                .last(request.getPage() % request.getSize() == request.getPage())
                 .totalRecords(totalRecords)
-                .totalPages(page % size)
-                .response(permissionList)
+                .totalPages(request.getPage() % request.getSize())
+                .response(permissionResponses)
                 .build();
     }
 }

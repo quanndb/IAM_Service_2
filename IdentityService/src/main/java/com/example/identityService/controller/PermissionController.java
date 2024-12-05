@@ -3,7 +3,9 @@ package com.example.identityService.controller;
 import com.example.identityService.DTO.ApiResponse;
 import com.example.identityService.DTO.request.CreatePermissionRequest;
 import com.example.identityService.DTO.request.PageRequest;
+import com.example.identityService.DTO.request.PermissionPageRequest;
 import com.example.identityService.DTO.response.PageResponse;
+import com.example.identityService.DTO.response.PermissionResponse;
 import com.example.identityService.entity.Permission;
 import com.example.identityService.service.PermissionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,11 +30,10 @@ public class PermissionController {
 
     @GetMapping
     @PreAuthorize("hasPermission('ROLES', 'READ')")
-    public ApiResponse<PageResponse<Permission>> getPermissions(@ModelAttribute PageRequest request) throws JsonProcessingException {
-        return ApiResponse.<PageResponse<Permission>>builder()
+    public ApiResponse<PageResponse<PermissionResponse>> getPermissions(@ModelAttribute PermissionPageRequest request) {
+        return ApiResponse.<PageResponse<PermissionResponse>>builder()
                 .code(200)
-                .result(permissionService.getPermissions(request.getPage(), request.getSize(), request.getQuery(),
-                        request.getSortedBy(), request.getSortDirection()))
+                .result(permissionService.getPermissions(request))
                 .build();
     }
 

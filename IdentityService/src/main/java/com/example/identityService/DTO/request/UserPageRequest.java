@@ -1,6 +1,5 @@
 package com.example.identityService.DTO.request;
 
-import com.example.identityService.DTO.Gender;
 import lombok.Getter;
 import lombok.Setter;
 
